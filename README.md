@@ -1,4 +1,4 @@
-# AEROSIGHT 🛸
+# A.S.A.R.D 🛸
 ### AI-Powered Autonomous Search and Rescue Drone System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -10,7 +10,7 @@
 
 > **Mission Motto:** *"Faster Detection | Safer Rescue | Stronger Tomorrow"*
 
-**AEROSIGHT** is a next-generation disaster response and autonomous aerial search-and-rescue platform engineered for disaster management agencies (such as NDRF, SDRF, and civil defense forces). It combines **deep learning vision transformers (RT-DETR-L / YOLO)**, an **ESP32 IoT sensor telemetry node**, and a **Three.js-powered 3D Tactical Ground Control Station** to locate survivors and detect secondary hazards in collapsed structures, flood zones, and earthquake rubble.
+**A.S.A.R.D** is a next-generation disaster response and autonomous aerial search-and-rescue platform engineered for disaster management agencies (such as NDRF, SDRF, and civil defense forces). It combines **deep learning vision transformers (RT-DETR-L / YOLO)**, an **ESP32 IoT sensor telemetry node**, and a **Three.js-powered 3D Tactical Ground Control Station** to locate survivors and detect secondary hazards in collapsed structures, flood zones, and earthquake rubble.
 
 ---
 
