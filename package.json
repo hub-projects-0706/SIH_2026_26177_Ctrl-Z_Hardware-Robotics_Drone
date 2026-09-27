@@ -1,0 +1,18 @@
+{
+  "name": "aerosight-disaster-response-platform",
+  "version": "1.0.0",
+  "description": "AEROSIGHT - AI Autonomous Search and Rescue Drone System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dashboard": "node \"web dashboard/server.js\""
+  },
+  "keywords": [
+    "disaster-response",
+    "rescue-drone",
+    "rtdetr",
+    "aerosight"
+  ],
+  "author": "AEROSIGHT Team",
+  "license": "MIT"
+}

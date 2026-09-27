@@ -1,0 +1,534 @@
+/* ==========================================================================
+   AEROSIGHT - MOBILE DRONE CAMERA TRANSMITTER STYLES
+   ========================================================================== */
+
+:root {
+  --cyan-neon: #38bdf8;
+  --cyan-glow: transparent;
+  --red-alert: #ef4444;
+  --green-live: #10b981;
+  --bg-dark: #070b12;
+  --font-main: 'Inter', sans-serif;
+  --font-hud: 'Rajdhani', monospace, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body.mobile-body {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: var(--font-main);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   TOP HUD HEADER
+   ========================================================================== */
+.mobile-hud-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(180deg, rgba(5, 12, 22, 0.9) 0%, rgba(5, 12, 22, 0) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.hud-brand {
+  display: flex;
+  flex-direction: column;
+}
+.brand-badge {
+  font-family: var(--font-hud);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ffffff;
+}
+.brand-mode {
+  font-size: 8.5px;
+  color: var(--cyan-neon);
+  letter-spacing: 1px;
+}
+
+.hud-connection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.status-dot-blink {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffaa00;
+  animation: pulse-dot 1s infinite;
+}
+.hud-connection.connected {
+  border-color: var(--green-live);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green-live);
+}
+.hud-connection.connected .status-dot-blink {
+  background: var(--green-live);
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.3); }
+}
+
+/* ==========================================================================
+   CAMERA VIEWPORT & HUD OVERLAYS
+   ========================================================================== */
+.camera-viewport {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  background: #000000;
+}
+
+#cameraVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tactical-hud-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 14px 14px 14px;
+}
+
+/* Top Meta */
+.hud-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 59, 86, 0.25);
+  border: 1px solid var(--red-alert);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-hud);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.rec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red-alert);
+  animation: rec-pulse 1s infinite;
+}
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.telemetry-chip {
+  background: rgba(8, 16, 26, 0.7);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cyan-neon);
+}
+
+/* ==========================================================================
+   SMART TARGETING RETICLE & ACCURACY DISPLAY
+   ========================================================================== */
+.hud-center-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 170px;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reticle-box {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border: 1px dashed rgba(0, 229, 255, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 4 Corner Brackets */
+.corner-bracket {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #00e5ff;
+  transition: all 0.25s ease;
+}
+.corner-bracket.top-left {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+.corner-bracket.top-right {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+.corner-bracket.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+}
+.corner-bracket.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Center Crosshair */
+.reticle-crosshair {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+.reticle-crosshair::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #00e5ff;
+  transition: background 0.25s;
+}
+.reticle-crosshair::after {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #00e5ff;
+  transition: background 0.25s;
+}
+
+/* Reticle Lock Badge */
+.reticle-lock-badge {
+  position: absolute;
+  top: -46px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(6, 15, 26, 0.88);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 4px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.25s ease;
+}
+
+.lock-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lock-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00e5ff;
+  animation: pulse-dot 1s infinite;
+}
+.lock-status-title {
+  font-family: var(--font-hud);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #00e5ff;
+}
+.lock-accuracy-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  font-weight: 700;
+}
+.lock-accuracy-label {
+  color: #8fa0b5;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+.lock-confidence-val {
+  color: #ffffff;
+  letter-spacing: 0.6px;
+}
+
+/* ==========================================================================
+   LOCKED STATE - VIBRANT NEON GREEN ON HUMAN FOCUS
+   ========================================================================== */
+.hud-center-reticle.locked {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.hud-center-reticle.locked .reticle-box {
+  border: 1.5px solid rgba(0, 255, 102, 0.65);
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.35), inset 0 0 15px rgba(0, 255, 102, 0.15);
+  animation: lock-snap 0.3s ease-out;
+}
+
+.hud-center-reticle.locked .corner-bracket {
+  border-color: #00ff66;
+  box-shadow: 0 0 10px #00ff66;
+  width: 26px;
+  height: 26px;
+}
+
+.hud-center-reticle.locked .reticle-crosshair::before,
+.hud-center-reticle.locked .reticle-crosshair::after {
+  background: #00ff66;
+  box-shadow: 0 0 8px #00ff66;
+}
+
+.hud-center-reticle.locked .reticle-lock-badge {
+  background: rgba(3, 28, 14, 0.92);
+  border-color: #00ff66;
+  box-shadow: 0 0 14px rgba(0, 255, 102, 0.5);
+}
+
+.hud-center-reticle.locked .lock-status-dot {
+  background: #00ff66;
+  box-shadow: 0 0 8px #00ff66;
+}
+
+.hud-center-reticle.locked .lock-status-title {
+  color: #00ff66;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.hud-center-reticle.locked .lock-accuracy-label {
+  color: #a3ffcc;
+}
+
+.hud-center-reticle.locked .lock-confidence-val {
+  color: #00ff66;
+  font-size: 13px;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.8);
+}
+
+@keyframes lock-snap {
+  0% { transform: scale(1.2); opacity: 0.6; }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Artificial Horizon Pitch Line */
+.horizon-pitch-line {
+  position: absolute;
+  width: 140px;
+  height: 2px;
+  background: rgba(0, 230, 118, 0.6);
+  box-shadow: 0 0 6px var(--green-live);
+  transition: transform 0.1s ease-out;
+  pointer-events: none;
+}
+
+/* Bottom Telemetry */
+.hud-bottom-telemetry {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(6, 14, 24, 0.75);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.telem-item {
+  font-family: var(--font-hud);
+  font-size: 11.5px;
+  color: #94a9c9;
+}
+.telem-item strong {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   BOTTOM CONTROLS DOCK
+   ========================================================================== */
+.mobile-controls-dock {
+  height: 80px;
+  background: #07101d;
+  border-top: 1px solid rgba(0, 210, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  z-index: 50;
+}
+
+.dock-btn {
+  background: rgba(0, 210, 255, 0.08);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  min-width: 64px;
+  transition: all 0.2s;
+}
+.dock-btn span {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-hud);
+  letter-spacing: 0.5px;
+}
+.dock-btn:active {
+  background: rgba(0, 210, 255, 0.25);
+  transform: scale(0.96);
+}
+
+/* Transmission Button (Big highlighted center) */
+.dock-btn.btn-tx {
+  background: linear-gradient(180deg, #00c853 0%, #009624 100%);
+  border: 1.5px solid var(--green-live);
+  min-width: 88px;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
+  position: relative;
+}
+.dock-btn.btn-tx.paused {
+  background: linear-gradient(180deg, #d32f2f 0%, #b71c1c 100%);
+  border-color: var(--red-alert);
+  box-shadow: 0 0 12px rgba(255, 59, 86, 0.4);
+}
+
+.dock-btn.btn-clear-history {
+  border-color: rgba(255, 59, 86, 0.35);
+}
+.dock-btn.btn-clear-history svg {
+  color: #ff3b56;
+}
+.dock-btn.btn-clear-history:active {
+  background: rgba(255, 59, 86, 0.25);
+}
+
+/* Snap Photo Button */
+.dock-btn.btn-snap {
+  background: linear-gradient(180deg, rgba(0, 210, 255, 0.2) 0%, rgba(0, 119, 255, 0.2) 100%);
+  border: 1.5px solid #00d2ff;
+  color: #00d2ff;
+}
+.dock-btn.btn-snap:active {
+  background: rgba(0, 210, 255, 0.4);
+  transform: scale(0.95);
+}
+
+/* HTTPS Warning Banner for Insecure Mobile Origins */
+.https-alert-banner {
+  position: absolute;
+  top: 52px;
+  left: 8px;
+  right: 8px;
+  z-index: 100;
+  background: rgba(26, 12, 12, 0.94);
+  border: 1.5px solid #ff3b56;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+  animation: slide-down 0.3s ease-out;
+}
+.https-alert-banner .alert-icon {
+  font-size: 20px;
+}
+.https-alert-banner .alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #f0f4f8;
+}
+.https-alert-banner .alert-text strong {
+  color: #ff5c73;
+}
+.btn-switch-https {
+  display: inline-block;
+  background: linear-gradient(135deg, #00d2ff 0%, #0077ff 100%);
+  color: #04101e;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 4px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 210, 255, 0.4);
+}
+.btn-switch-https:active {
+  transform: scale(0.97);
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+

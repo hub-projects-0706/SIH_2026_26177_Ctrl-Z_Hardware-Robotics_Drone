@@ -1,0 +1,24 @@
+{
+  "name": "aerosight-disaster-response-platform",
+  "version": "1.0.0",
+  "description": "AEROSIGHT - AI-Powered Autonomous Disaster Response Platform (3D Dashboard)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "disaster-response",
+    "drone",
+    "3d-map",
+    "threejs",
+    "aerosight",
+    "ndrf"
+  ],
+  "author": "AEROSIGHT Core Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.21.3"
+  }
+}

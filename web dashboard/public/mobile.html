@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AEROSIGHT | Drone Camera Transmitter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/mobile.css">
+</head>
+<body class="mobile-body">
+
+  <!-- TOP HUD BAR -->
+  <header class="mobile-hud-header">
+    <div class="hud-brand">
+      <div class="brand-badge">AEROSIGHT</div>
+      <div class="brand-mode">MOBILE DRONE RECON</div>
+    </div>
+    <div class="hud-connection" id="connectionBadge">
+      <span class="status-dot-blink" id="statusDot"></span>
+      <span id="statusText">CONNECTING...</span>
+    </div>
+  </header>
+
+  <!-- HTTPS / CAMERA PERMISSION ALERT BANNER -->
+  <div class="https-alert-banner" id="httpsAlertBanner" style="display: none;">
+    <div class="alert-icon">🔒</div>
+    <div class="alert-text">
+      <strong>Camera access requires HTTPS on mobile browsers.</strong>
+      <span>Tap below to switch to the secure HTTPS stream:</span>
+      <a href="#" id="linkSwitchHttps" class="btn-switch-https">👉 Switch to Secure HTTPS (Port 3443)</a>
+    </div>
+  </div>
+
+  <!-- CAMERA VIEWFINDER -->
+  <main class="camera-viewport">
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <canvas id="frameCanvas" style="display: none;"></canvas>
+    <img id="snapshotPreview" style="display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;" alt="Snapshot Preview">
+
+    <!-- TACTICAL HUD OVERLAY -->
+    <div class="tactical-hud-overlay">
+      <!-- Top Meta Readouts -->
+      <div class="hud-top-meta">
+        <div class="rec-indicator">
+          <span class="rec-dot"></span>
+          <span>LIVE DRONE TX</span>
+        </div>
+        <div class="telemetry-chip" id="headingChip">HDG: 042°</div>
+        <div class="telemetry-chip" id="fpsChip">20 FPS</div>
+      </div>
+
+      <!-- Center Targeting Reticle & Pitch Horizon -->
+      <div class="hud-center-reticle" id="targetingReticle">
+        <div class="reticle-box" id="reticleBox">
+          <span class="corner-bracket top-left"></span>
+          <span class="corner-bracket top-right"></span>
+          <span class="corner-bracket bottom-left"></span>
+          <span class="corner-bracket bottom-right"></span>
+          
+          <!-- Targeting Status & Accuracy Badge -->
+          <div class="reticle-lock-badge" id="reticleLockBadge">
+            <div class="lock-badge-header">
+              <span class="lock-status-dot" id="lockStatusDot"></span>
+              <span class="lock-status-title" id="lockStatusTitle">SEARCHING...</span>
+            </div>
+            <div class="lock-accuracy-row" id="reticleAccuracyRow">
+              <span class="lock-accuracy-label">CONFIDENCE:</span>
+              <span class="lock-confidence-val" id="reticleConfVal">AIM AT HUMAN</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reticle-crosshair"></div>
+        <div class="horizon-pitch-line" id="horizonLine"></div>
+      </div>
+
+      <!-- Bottom Sensor Telemetry Stamp -->
+      <div class="hud-bottom-telemetry">
+        <div class="telem-item">ALT: <strong id="mobileAlt">120 M</strong></div>
+        <div class="telem-item">PITCH: <strong id="mobilePitch">0°</strong></div>
+        <div class="telem-item">ROLL: <strong id="mobileRoll">0°</strong></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- HIDDEN SNAPSHOT INPUT (Universal Mobile Camera Fallback) -->
+  <input type="file" id="mobileSnapInput" accept="image/*" capture="environment" style="display: none;">
+
+  <!-- BOTTOM CONTROLS DOCK -->
+  <footer class="mobile-controls-dock">
+    <!-- Camera Flip Button -->
+    <button class="dock-btn" id="btnFlipCamera" title="Switch Camera">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l2-3h6l2 3h3a2 2 0 0 1 2 2v2"></path>
+        <path d="M14 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path>
+        <polyline points="1 4 1 10 7 10"></polyline>
+      </svg>
+      <span>Flip Cam</span>
+    </button>
+
+    <!-- Snap Photo Button (Universal camera capture) -->
+    <button class="dock-btn btn-snap" id="btnMobileSnap" title="Snap / Capture Photo for AI Lock">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19 4h-3.17L14.4 2H9.6L8.17 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+      </svg>
+      <span>Snap Photo</span>
+    </button>
+
+    <!-- Transmission Toggle Button -->
+    <button class="dock-btn btn-tx active" id="btnToggleTx">
+      <div class="tx-pulse-ring"></div>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M2 12h2a8 8 0 0 1 8-8V2a10 10 0 0 0-10 10zm10 10v-2a8 8 0 0 1-8-8H2a10 10 0 0 0 10 10zm10-10a10 10 0 0 0-10-10v2a8 8 0 0 1 8 8h2zm-2 0a8 8 0 0 1-8 8v2a10 10 0 0 0 10-10h-2z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span id="txLabel">TRANSMITTING</span>
+    </button>
+
+    <!-- Clear History Button -->
+    <button class="dock-btn btn-clear-history" id="btnMobileClear" title="Clear Detection Data">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff3b56" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      <span>Clear</span>
+    </button>
+
+    <!-- Flashlight / Torch Button (if supported) -->
+    <button class="dock-btn" id="btnTorch" title="Drone Searchlight">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <span>Spotlight</span>
+    </button>
+  </footer>
+
+  <script src="/js/mobile.js"></script>
+</body>
+</html>

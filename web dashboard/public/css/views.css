@@ -1,0 +1,911 @@
+/* ==========================================================================
+   AEROSIGHT - DEDICATED VIEWS STYLES
+   (Mission Plan, Live Feed Recon Wall, Drone Control & Payload)
+   ========================================================================== */
+
+/* View Panels */
+.view-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  animation: view-fade-in 0.25s ease-out;
+}
+@keyframes view-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Common View Banner */
+.view-header-banner {
+  background: linear-gradient(90deg, #0a182c 0%, #0c1c34 100%);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--card-shadow);
+}
+.view-banner-title {
+  display: flex;
+  flex-direction: column;
+}
+.view-title-main {
+  font-family: var(--font-tactical);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.view-title-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.view-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   1. MISSION PLAN VIEW STYLES
+   ========================================================================== */
+.mission-plan-grid {
+  display: grid;
+  grid-template-columns: 6.2fr 3.8fr;
+  gap: 12px;
+  min-height: 520px;
+}
+
+.mission-map-container {
+  position: relative;
+  width: 100%;
+  height: 310px;
+  background: #040810;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.mission-map-container #missionPlannerMap {
+  width: 100%;
+  height: 100%;
+}
+
+.waypoint-table-card {
+  margin-top: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* Mission Settings Column */
+.mission-config-card {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.config-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.config-field-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.config-field-label strong {
+  color: var(--cyan-primary);
+  font-family: var(--font-tactical);
+}
+.tactical-range {
+  width: 100%;
+  accent-color: var(--cyan-primary);
+  cursor: pointer;
+}
+
+.metrics-summary-box {
+  background: #07101d;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.metric-tile {
+  display: flex;
+  flex-direction: column;
+}
+.metric-tile-label {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.metric-tile-val {
+  font-family: var(--font-tactical);
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.btn-transmit-mission {
+  height: 42px;
+  background: linear-gradient(180deg, #00c853 0%, #009624 100%);
+  border: 1px solid var(--green-rescue);
+  color: #ffffff;
+  font-family: var(--font-tactical);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 14px rgba(0, 230, 118, 0.4);
+  transition: all 0.2s;
+}
+.btn-transmit-mission:hover {
+  background: linear-gradient(180deg, #00e676 0%, #00b248 100%);
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.7);
+}
+
+/* ==========================================================================
+   2. LIVE FEED RECON WALL STYLES
+   ========================================================================== */
+.live-feed-wall-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cinema-video-wall {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  background: #020509;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  display: flex;
+}
+
+.wall-feed-half {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #040810;
+}
+.wall-feed-half:first-child {
+  border-right: 1px solid var(--border-subtle);
+}
+
+.wall-video-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wall-hud-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(8, 16, 26, 0.85);
+  border: 1px solid var(--border-card);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cyan-primary);
+  z-index: 20;
+}
+
+.wall-telemetry-osd {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+}
+
+/* Video Wall Bottom Controls */
+.cinema-controls-bar {
+  background: #091322;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cinema-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Snapshot Gallery Strip */
+.snapshot-gallery-card {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gallery-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.gallery-item {
+  width: 140px;
+  background: #081220;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.gallery-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--cyan-primary);
+}
+.gallery-thumb {
+  width: 100%;
+  height: 85px;
+  object-fit: cover;
+  display: block;
+}
+.gallery-meta {
+  padding: 5px 8px;
+  font-size: 10.5px;
+  display: flex;
+  flex-direction: column;
+}
+.gallery-id {
+  font-family: var(--font-tactical);
+  font-weight: 700;
+  color: var(--cyan-primary);
+}
+
+/* ==========================================================================
+   3. DRONE CONTROL & MANUAL OVERRIDE STYLES
+   ========================================================================== */
+.drone-control-grid {
+  display: grid;
+  grid-template-columns: 3.5fr 3.2fr 3.3fr;
+  gap: 12px;
+  min-height: 480px;
+}
+
+/* Virtual Joysticks Box */
+.joysticks-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 16px 8px;
+  background: #07101d;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+.joystick-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.joystick-base {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0e1c2e 0%, #081220 100%);
+  border: 2px solid var(--border-active);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  cursor: grab;
+  touch-action: none;
+}
+.joystick-stick {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #00d2ff 0%, #0088cc 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px var(--cyan-glow);
+  position: absolute;
+  pointer-events: none;
+  transition: transform 0.05s linear;
+}
+.joystick-label {
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.tactical-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.ctrl-action-btn {
+  height: 32px;
+  background: rgba(0, 210, 255, 0.08);
+  border: 1px solid var(--border-card);
+  color: #ffffff;
+  font-family: var(--font-tactical);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ctrl-action-btn:hover {
+  background: var(--cyan-subtle);
+  border-color: var(--cyan-primary);
+  color: var(--cyan-primary);
+}
+
+/* Gimbal & Payload Column */
+.fpv-gimbal-screen {
+  width: 100%;
+  height: 140px;
+  background: #020509;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-subtle);
+}
+.fpv-gimbal-screen img, .fpv-gimbal-screen canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gimbal-hud-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(0, 210, 255, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Payload Release Drop Box */
+.payload-drop-box {
+  background: rgba(255, 59, 86, 0.08);
+  border: 1.5px solid rgba(255, 59, 86, 0.4);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.payload-drop-title {
+  font-family: var(--font-tactical);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red-alert);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-drop-payload {
+  background: linear-gradient(180deg, #ff3b56 0%, #b71c1c 100%);
+  border: none;
+  color: #ffffff;
+  font-family: var(--font-tactical);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--red-alert-glow);
+  transition: all 0.2s;
+}
+.btn-drop-payload:hover {
+  background: linear-gradient(180deg, #ff5c73 0%, #d32f2f 100%);
+  box-shadow: 0 0 16px rgba(255, 59, 86, 0.8);
+}
+
+/* Subsystem Diagnostics Column */
+.diag-row-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 11.5px;
+}
+.diag-label {
+  color: var(--text-secondary);
+}
+.diag-val {
+  font-family: var(--font-tactical);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.motor-bars-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+}
+.motor-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.motor-col-bar {
+  width: 100%;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+.motor-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #00e5ff 0%, #0088cc 100%);
+  border-radius: 3px;
+  transition: height 0.4s ease;
+}
+.motor-title {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-family: var(--font-tactical);
+}
+.motor-rpm {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--font-tactical);
+}
+
+@media (max-width: 1100px) {
+  .mission-plan-grid,
+  .drone-control-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+.tactical-modal-backdrop.active {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   4. 3D TACTICAL MAP & AUTONOMOUS MISSION STYLES
+   ========================================================================== */
+.map3d-workspace {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 128px);
+  min-height: 640px;
+  background: #060e1b;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.map3d-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map3d-canvas-wrapper canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+.map3d-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #00e5ff;
+}
+
+.map3d-telemetry-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(8, 20, 36, 0.85);
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+}
+
+.map3d-floating-toolbar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(8, 20, 36, 0.88);
+  backdrop-filter: blur(14px);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.map3d-tool-btn {
+  padding: 6px 12px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.map3d-tool-btn.active {
+  background: rgba(0, 229, 255, 0.25) !important;
+  border-color: #00e5ff !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+}
+
+.map3d-tool-btn.primary-glow {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 150, 255, 0.3));
+  border-color: #00e5ff;
+  color: #00f0ff;
+  font-weight: 700;
+}
+
+.map3d-tool-btn.primary-glow:hover {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(0, 150, 255, 0.45));
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+}
+
+.map3d-tool-btn.danger-hover:hover {
+  border-color: rgba(255, 59, 86, 0.6);
+  color: #ff5c73;
+  background: rgba(255, 59, 86, 0.15);
+}
+
+.map3d-hint-banner {
+  position: absolute;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99;
+  background: rgba(0, 229, 255, 0.18);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #00f0ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
+}
+
+.map3d-hud-card {
+  position: absolute;
+  z-index: 90;
+  background: rgba(8, 20, 36, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.map3d-hud-card.hud-left {
+  top: 14px;
+  left: 14px;
+  width: 270px;
+}
+
+.map3d-hud-card.hud-right {
+  top: 14px;
+  right: 14px;
+  width: 290px;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-card-header {
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.hud-card-icon {
+  color: var(--cyan-primary);
+}
+
+.hud-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hud-metric-item {
+  background: rgba(0, 210, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-metric-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  font-family: var(--font-tactical);
+}
+
+.hud-metric-value {
+  font-family: var(--font-tactical);
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.hud-controls-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.hud-control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.hud-control-row label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hud-control-row strong {
+  color: var(--cyan-primary);
+}
+
+.hud-victim-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 380px;
+  padding-right: 2px;
+}
+
+.hud-victim-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 10px 4px;
+  text-align: center;
+}
+
+.hud-victim-item {
+  background: rgba(255, 59, 86, 0.08);
+  border: 1px solid rgba(255, 59, 86, 0.3);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-victim-item:hover {
+  background: rgba(255, 59, 86, 0.16);
+  border-color: #ff3b56;
+  transform: translateX(2px);
+}
+
+.hud-victim-item.active {
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.hud-victim-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-victim-title {
+  font-family: var(--font-tactical);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-victim-coords {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.hud-victim-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-victim-conf {
+  font-family: var(--font-tactical);
+  font-size: 11px;
+  font-weight: 700;
+  color: #00ff66;
+}
+
+.hud-focus-btn {
+  padding: 2px 8px;
+  font-size: 9.5px;
+  border-radius: 4px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: #00e5ff;
+  cursor: pointer;
+}
+
+.hud-focus-btn:hover {
+  background: rgba(0, 229, 255, 0.25);
+}
+
+.map3d-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 90;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(8, 20, 36, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.dot-cyan { background: #00e5ff; box-shadow: 0 0 6px #00e5ff; }
+.legend-dot.dot-red { background: #ff3b56; box-shadow: 0 0 6px #ff3b56; }
+.legend-dot.dot-dashed { background: none; border-top: 2px dashed #00d2ff; width: 12px; border-radius: 0; }
+.legend-dot.dot-zone { background: rgba(0, 229, 255, 0.3); border: 1px solid #00e5ff; border-radius: 2px; }
+.legend-dot.dot-orange { background: #ffaa00; }
+
+/* 3D Google Satellite Map Enhanced Controls */
+.map3d-search-bar {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.map3d-search-bar:focus-within {
+  border-color: var(--cyan-primary) !important;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3) !important;
+}
+
+.map3d-search-input::placeholder {
+  color: rgba(140, 165, 195, 0.6);
+  font-size: 10.5px;
+}
+
+.map3d-compass-btn:hover {
+  border-color: var(--cyan-primary) !important;
+  transform: scale(1.06);
+}
+
+.map3d-compass-btn:active {
+  transform: scale(0.96);
+}
+
+.toolbar-tilt-box input[type="range"]::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cyan-primary);
+  box-shadow: 0 0 8px #00e5ff;
+  cursor: pointer;
+}
+
+
