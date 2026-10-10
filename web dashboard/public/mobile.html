@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AEROSIGHT | Drone Camera Transmitter</title>
+  <title>A.S.A.R.D | Drone Camera Transmitter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -14,14 +14,34 @@
   <!-- TOP HUD BAR -->
   <header class="mobile-hud-header">
     <div class="hud-brand">
-      <div class="brand-badge">AEROSIGHT</div>
+      <div class="brand-badge">A.S.A.R.D</div>
       <div class="brand-mode">MOBILE DRONE RECON</div>
     </div>
-    <div class="hud-connection" id="connectionBadge">
-      <span class="status-dot-blink" id="statusDot"></span>
-      <span id="statusText">CONNECTING...</span>
+    <div class="hud-connection-wrap">
+      <div class="hud-signal-pill" id="mobileSignalPill" title="RF Link Quality">
+        <span class="signal-tag" id="mobileSignalTag">5G/Wi-Fi</span>
+        <div class="mobile-signal-bars" id="mobileSignalBars">
+          <span class="bar active"></span>
+          <span class="bar active"></span>
+          <span class="bar active"></span>
+          <span class="bar active"></span>
+        </div>
+      </div>
+      <div class="hud-connection" id="connectionBadge">
+        <span class="status-dot-blink" id="statusDot"></span>
+        <span id="statusText">CONNECTING...</span>
+      </div>
     </div>
   </header>
+
+  <!-- EMERGENCY LOUDSPEAKER INCOMING ANNOUNCEMENT BANNER -->
+  <div class="mobile-bcast-banner" id="mobileBcastBanner" style="display: none;">
+    <div class="bcast-icon">📢</div>
+    <div class="bcast-text">
+      <strong>COMMAND LOUDSPEAKER ACTIVE:</strong>
+      <span id="mobileBcastText">Emergency broadcast received</span>
+    </div>
+  </div>
 
   <!-- HTTPS / CAMERA PERMISSION ALERT BANNER -->
   <div class="https-alert-banner" id="httpsAlertBanner" style="display: none;">
@@ -128,6 +148,17 @@
       <span>Clear</span>
     </button>
 
+    <!-- 2-Way Radio Intercom Button -->
+    <button class="dock-btn btn-comms-radio" id="btnMobileOpenComms" title="Two-Way Radio Intercom">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+      <span>2-Way Radio</span>
+    </button>
+
     <!-- Flashlight / Torch Button (if supported) -->
     <button class="dock-btn" id="btnTorch" title="Drone Searchlight">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -136,6 +167,41 @@
       <span>Spotlight</span>
     </button>
   </footer>
+
+  <!-- MOBILE TWO-WAY COMMS & PTT DRAWER -->
+  <div class="mobile-comms-drawer" id="mobileCommsDrawer" style="display: none;">
+    <div class="mobile-drawer-header">
+      <div class="drawer-title">
+        <span class="status-dot-blink" style="background: #00e676;"></span>
+        <span>2-WAY RADIO TO COMMAND GCS</span>
+      </div>
+      <button class="drawer-close-btn" id="btnCloseMobileComms">&times;</button>
+    </div>
+    <div class="mobile-drawer-body">
+      <!-- PTT Button for phone -->
+      <button class="mobile-btn-ptt" id="btnMobilePtt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <span id="mobilePttLabel">PUSH TO TALK (SPEAK TO COMMAND)</span>
+      </button>
+
+      <!-- Quick Status Replies -->
+      <div class="mobile-quick-chips">
+        <button class="mobile-chip" data-reply="Survivor Responsive and Breathing">✅ Survivor Responsive</button>
+        <button class="mobile-chip" data-reply="Urgent: First Aid Kit / Medical Drop Needed">🩹 Request Med Kit</button>
+        <button class="mobile-chip" data-reply="Rubble Pile Unstable, Extreme Caution">⚠️ Rubble Unstable</button>
+        <button class="mobile-chip" data-reply="Clear for Ground Team Extraction">🚀 Clear to Extract</button>
+        <button class="mobile-chip" data-reply="Message Received. Holding Position.">👍 Copy That</button>
+      </div>
+
+      <!-- Live message feed -->
+      <div class="mobile-messages-feed" id="mobileMessagesFeed"></div>
+    </div>
+  </div>
 
   <script src="/js/mobile.js"></script>
 </body>

@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dashboard": "node \"web dashboard/server.js\""
+    "dashboard": "node \"web dashboard/server.js\"",
+    "ml": ".\\.venv\\Scripts\\python.exe -m uvicorn ml_server:app --host 0.0.0.0 --port 8000"
   },
   "keywords": [
     "disaster-response",
@@ -14,5 +15,9 @@
     "aerosight"
   ],
   "author": "AEROSIGHT Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.21.3"
+  }
 }

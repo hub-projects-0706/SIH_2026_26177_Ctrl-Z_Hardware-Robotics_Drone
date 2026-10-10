@@ -1,7 +1,7 @@
 /**
- * AEROSIGHT - Mobile Drone Camera Transmitter
+ * A.S.A.R.D - Mobile Drone Camera Transmitter
  * Streams mobile camera frames & sensor telemetry (compass, pitch, roll, GPS)
- * via WebSocket to the AEROSIGHT command dashboard in real-time.
+ * via WebSocket to the A.S.A.R.D command dashboard in real-time.
  */
 
 (() => {
@@ -192,6 +192,7 @@
     await startCamera();
     setupSensors();
     setupButtons();
+    setupMobileComms();
     startFrameLoop();
   }
 
@@ -203,7 +204,7 @@
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('[Mobile Drone] Connected to AEROSIGHT Server');
+      console.log('[Mobile Drone] Connected to A.S.A.R.D Server');
       connectionBadge.className = 'hud-connection connected';
       statusText.textContent = 'ONLINE [TX]';
       ws.send(JSON.stringify({ type: 'register', role: 'drone_sender' }));
@@ -219,6 +220,20 @@
           setTargetLock(true, conf, msg.data.label || 'Person');
         } else if (msg.type === 'clear_detections') {
           resetTargetLock();
+        } else if (msg.type === 'comms_broadcast') {
+          handleIncomingLoudspeaker(msg.text);
+        } else if (msg.type === 'comms_audio') {
+          if (msg.senderRole === 'gcs') {
+            handleIncomingVoiceAudio(msg.audioData);
+          }
+        } else if (msg.type === 'comms_message') {
+          appendMobileMessage(msg.message);
+        } else if (msg.type === 'comms_history') {
+          if (Array.isArray(msg.messages)) {
+            msg.messages.forEach(m => appendMobileMessage(m));
+          }
+        } else if (msg.type === 'telemetry_update' && msg.telemetry) {
+          updateMobileSignalHud(msg.telemetry);
         }
       } catch (err) {
         console.warn('Mobile WS message parse error', err);
@@ -463,6 +478,194 @@
       } catch (err) {
         console.warn('Torch error', err);
       }
+    });
+  }
+
+  // =========================================================================
+  // MOBILE TWO-WAY COMMS & LOUDSPEAKER INTERCOM
+  // =========================================================================
+  let mobileMediaRecorder = null;
+  let mobileAudioChunks = [];
+  let isMobilePttActive = false;
+
+  function updateMobileSignalHud(telem) {
+    const barsContainer = document.getElementById('mobileSignalBars');
+    const tag = document.getElementById('mobileSignalTag');
+    if (tag) tag.textContent = telem.signalStrength || '5G/Wi-Fi';
+    if (barsContainer) {
+      const bars = barsContainer.querySelectorAll('.bar');
+      const activeCount = Math.max(1, Math.min(4, telem.signalBars || 4));
+      bars.forEach((b, i) => {
+        if (i < activeCount) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    }
+  }
+
+  function handleIncomingLoudspeaker(text) {
+    if (!text) return;
+    const banner = document.getElementById('mobileBcastBanner');
+    const bcastText = document.getElementById('mobileBcastText');
+    if (banner && bcastText) {
+      bcastText.textContent = text;
+      banner.style.display = 'flex';
+      setTimeout(() => { banner.style.display = 'none'; }, 8000);
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 400]);
+    }
+    playLockChirp();
+
+    // Use speech synthesis on phone to announce loudly to survivors!
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        utter.pitch = 1.0;
+        utter.volume = 1.0;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+  }
+
+  function handleIncomingVoiceAudio(audioData) {
+    if (!audioData) return;
+    try {
+      playLockChirp();
+      const audio = new Audio(audioData);
+      audio.volume = 1.0;
+      audio.play().catch(e => console.warn('Mobile audio play error:', e));
+    } catch (e) {}
+  }
+
+  function appendMobileMessage(msg) {
+    if (!msg) return;
+    const feed = document.getElementById('mobileMessagesFeed');
+    if (!feed) return;
+    const item = document.createElement('div');
+    item.className = `mobile-msg-item ${msg.senderRole || 'gcs'}`;
+    item.innerHTML = `
+      <div class="msg-header">
+        <strong>${msg.senderName || msg.sender}</strong>
+        <span>${msg.timestamp || ''}</span>
+      </div>
+      <div class="msg-content">${msg.text}</div>
+    `;
+    feed.appendChild(item);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function setupMobileComms() {
+    const btnOpen = document.getElementById('btnMobileOpenComms');
+    const drawer = document.getElementById('mobileCommsDrawer');
+    const btnClose = document.getElementById('btnCloseMobileComms');
+    const btnPtt = document.getElementById('btnMobilePtt');
+    const pttLabel = document.getElementById('mobilePttLabel');
+
+    if (btnOpen && drawer) {
+      btnOpen.addEventListener('click', () => {
+        drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+      });
+    }
+    if (btnClose && drawer) {
+      btnClose.addEventListener('click', () => {
+        drawer.style.display = 'none';
+      });
+    }
+
+    // Phone PTT audio capture
+    async function startMobilePtt() {
+      if (isMobilePttActive) return;
+      isMobilePttActive = true;
+      if (btnPtt) btnPtt.classList.add('transmitting');
+      if (pttLabel) pttLabel.textContent = 'RECORDING AUDIO TO COMMAND...';
+
+      if (navigator.vibrate) navigator.vibrate(60);
+      playLockChirp();
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mobileAudioChunks = [];
+        mobileMediaRecorder = new MediaRecorder(stream);
+        mobileMediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) mobileAudioChunks.push(e.data);
+        };
+        mobileMediaRecorder.onstop = () => {
+          const blob = new Blob(mobileAudioChunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64Audio = reader.result;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'comms_audio',
+                audioData: base64Audio,
+                senderRole: 'drone',
+                senderName: 'Drone Recon Unit #01'
+              }));
+              ws.send(JSON.stringify({
+                type: 'comms_message',
+                message: {
+                  sender: 'DRONE_01',
+                  senderName: 'Drone Recon Unit #01',
+                  senderRole: 'drone',
+                  text: '🎙️ Voice Audio Transmission from Field Recon',
+                  audioData: base64Audio,
+                  type: 'voice_clip',
+                  channel: 'CH-1'
+                }
+              }));
+            }
+          };
+          reader.readAsDataURL(blob);
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mobileMediaRecorder.start();
+      } catch (err) {
+        console.warn('Mobile mic error:', err);
+      }
+    }
+
+    function stopMobilePtt() {
+      if (!isMobilePttActive) return;
+      isMobilePttActive = false;
+      if (btnPtt) btnPtt.classList.remove('transmitting');
+      if (pttLabel) pttLabel.textContent = 'PUSH TO TALK (SPEAK TO COMMAND)';
+
+      if (mobileMediaRecorder && mobileMediaRecorder.state !== 'inactive') {
+        try { mobileMediaRecorder.stop(); } catch (e) {}
+      }
+    }
+
+    if (btnPtt) {
+      btnPtt.addEventListener('mousedown', startMobilePtt);
+      window.addEventListener('mouseup', stopMobilePtt);
+      btnPtt.addEventListener('touchstart', (e) => { e.preventDefault(); startMobilePtt(); });
+      window.addEventListener('touchend', stopMobilePtt);
+    }
+
+    // Quick Reply Buttons
+    document.querySelectorAll('.mobile-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const text = chip.getAttribute('data-reply');
+        if (text && ws && ws.readyState === WebSocket.OPEN) {
+          const msg = {
+            sender: 'DRONE_01',
+            senderName: 'Drone Recon Unit #01',
+            senderRole: 'drone',
+            text: text,
+            type: 'field',
+            channel: 'CH-1',
+            timestamp: new Date().toTimeString().split(' ')[0]
+          };
+          ws.send(JSON.stringify({
+            type: 'comms_message',
+            message: msg
+          }));
+          if (navigator.vibrate) navigator.vibrate(40);
+        }
+      });
     });
   }
 

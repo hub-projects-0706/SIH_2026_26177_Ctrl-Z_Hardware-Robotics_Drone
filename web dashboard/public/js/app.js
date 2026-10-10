@@ -1,6 +1,11 @@
 /**
- * AEROSIGHT - Main Application Orchestrator
- * Initializes all tactical dashboard modules and manages global view states
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * Main Application Orchestrator (app.js)
+ *
+ * This file starts up all the dashboard modules in the right order.
+ * Think of it as the "main()" function for the browser side.
+ * =============================================================================
  */
 
 // Global Toast Notification Helper
@@ -37,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   TargetDetailsManager.init();
   MissionManager.init();
   RescueLogManager.init();
+  if (window.CommsManager) CommsManager.init();
   if (window.ViewsManager) ViewsManager.init();
 
   // 2. Connect Live Telemetry to Google 3D Satellite Map Drone Marker
@@ -85,5 +91,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  console.log('[AEROSIGHT] Google 3D Satellite Autonomous Disaster Response Platform initialized.');
+  console.log('[A.S.A.R.D] Autonomous Search And Rescue Drone Dashboard initialized.');
 });

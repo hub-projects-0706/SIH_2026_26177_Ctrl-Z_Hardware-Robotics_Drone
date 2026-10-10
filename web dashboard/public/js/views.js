@@ -1,10 +1,14 @@
 /**
- * AEROSIGHT - Dedicated Views Manager
- * Controls:
- * 1. View Tab Routing (Dashboard, Mission Plan, Live Feed Recon Wall, Drone Control)
- * 2. Mission Flight Planner & Lawnmower Grid Generator (MAVLink Waypoints)
- * 3. Live Feed Recon Wall (Cinema Split, Thermal Radiometry, Forensic Snapshots)
- * 4. Drone Control & Fly-By-Wire Manual Override (Dual Joysticks, Gimbal, Payload Drop)
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * Views Manager (views.js)
+ *
+ * Controls which page/view is shown (tab switching):
+ *   - Dashboard (main overview)
+ *   - Mission Plan (set waypoints for the drone)
+ *   - Live Feed (camera wall and thermal view)
+ *   - Drone Control (manual joystick override)
+ * =============================================================================
  */
 
 const ViewsManager = (function () {
@@ -13,6 +17,8 @@ const ViewsManager = (function () {
   let plannerPolyline = null;
   let plannerMarkers = [];
   let plannerAreaPolygon = null;
+
+  let updateDroneRouteSummaryGlobal = null;
 
   // Default mission waypoints around disaster zone (Madurai Sector B)
   let waypoints = [
@@ -76,11 +82,27 @@ const ViewsManager = (function () {
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
       item.addEventListener('click', (e) => {
-        e.preventDefault();
         const targetNav = item.getAttribute('data-nav');
-        switchView(targetNav);
+        if (targetNav) {
+          switchView(targetNav);
+        }
       });
     });
+
+    // Handle hash route on load (e.g. when opened in a new tab via target="_blank")
+    checkInitialHashRoute();
+    window.addEventListener('hashchange', checkInitialHashRoute);
+  }
+
+  function checkInitialHashRoute() {
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    if (hash) {
+      if (hash === 'mission-plan' || hash === 'missionplan') switchView('mission-plan');
+      else if (hash === 'live-feed' || hash === 'livefeed') switchView('live-feed');
+      else if (hash === 'drone-control' || hash === 'dronecontrol') switchView('drone-control');
+      else if (hash === 'two-way-comms' || hash === 'comms') switchView('two-way-comms');
+      else if (hash === 'overview' || hash === 'dashboard') switchView('dashboard');
+    }
   }
 
   function switchView(viewName) {
@@ -122,7 +144,7 @@ const ViewsManager = (function () {
     });
 
     // Hide all view panels
-    const panels = ['viewDashboard', 'viewMap3D', 'viewMissionPlan', 'viewLiveFeed', 'viewDroneControl'];
+    const panels = ['viewDashboard', 'viewMissionPlan', 'viewLiveFeed', 'viewDroneControl', 'viewTwoWayComms'];
     panels.forEach(id => {
       const p = document.getElementById(id);
       if (p) p.style.display = 'none';
@@ -136,13 +158,6 @@ const ViewsManager = (function () {
         if (window.MapGoogle3DManager) MapGoogle3DManager.resize();
       }, 100);
       window.showToast('Switched to: Main Tactical Command Dashboard');
-    } else if (viewName === 'map-3d') {
-      const m3d = document.getElementById('viewMap3D');
-      if (m3d) m3d.style.display = 'flex';
-      setTimeout(() => {
-        if (window.MapGoogle3DManager) MapGoogle3DManager.resize();
-      }, 100);
-      window.showToast('Switched to: 3D Tactical Map & Autonomous Mission Center');
     } else if (viewName === 'mission-plan') {
       const mp = document.getElementById('viewMissionPlan');
       if (mp) mp.style.display = 'flex';
@@ -165,7 +180,13 @@ const ViewsManager = (function () {
       if (dc) dc.style.display = 'flex';
       startMotorAnimation();
       syncGimbalSource();
+      if (typeof updateDroneRouteSummaryGlobal === 'function') updateDroneRouteSummaryGlobal();
       window.showToast('Switched to: Fly-By-Wire Manual Drone Control');
+    } else if (viewName === 'two-way-comms') {
+      const tc = document.getElementById('viewTwoWayComms');
+      if (tc) tc.style.display = 'flex';
+      if (window.CommsManager) CommsManager.renderMessages();
+      window.showToast('Switched to: Two-Way Tactical Communications & Loudspeaker Intercom');
     }
   }
 
@@ -178,18 +199,54 @@ const ViewsManager = (function () {
     const btnExport = document.getElementById('btnExportWaypoints');
     const btnAddManual = document.getElementById('btnAddWaypointManual');
     const btnTransmit = document.getElementById('btnTransmitMission');
+    const btnMainTransmit = document.getElementById('btnMainTransmitMavlink');
+    const btnTransmitMarked = document.getElementById('btnTransmitMarkedPlacesMavlink');
+
+    const btnTakeoff = document.getElementById('btnMainMavlinkTakeoff');
 
     const rngAlt = document.getElementById('rngPlanAltitude');
     const rngSpacing = document.getElementById('rngPlanSpacing');
     const rngSpeed = document.getElementById('rngPlanSpeed');
     const selPattern = document.getElementById('planPatternSelect');
 
+    const inpMavIp = document.getElementById('mavTargetIp');
+    const inpMainMavIp = document.getElementById('mainMavTargetIp');
+    const inpMavPort = document.getElementById('mavTargetPort');
+
+    // Restore persisted remote ArduPilot / Mission Planner endpoint
+    const savedIp = localStorage.getItem('A.S.A.R.D_mavlink_ip') || 'tcp:10.10.95.188:5762';
+    const savedPort = localStorage.getItem('A.S.A.R.D_mavlink_port') || '5762';
+    if (inpMavIp) inpMavIp.value = savedIp;
+    if (inpMainMavIp) inpMainMavIp.value = savedIp;
+    if (inpMavPort) inpMavPort.value = savedPort;
+
+    // Bidirectional sync between Flight Planner and Main Dashboard IP inputs
+    const handleIpChange = (newIp) => {
+      const val = newIp.trim();
+      localStorage.setItem('A.S.A.R.D_mavlink_ip', val);
+      if (inpMavIp && inpMavIp.value !== val) inpMavIp.value = val;
+      if (inpMainMavIp && inpMainMavIp.value !== val) inpMainMavIp.value = val;
+    };
+    if (inpMavIp) inpMavIp.addEventListener('input', (e) => handleIpChange(e.target.value));
+    if (inpMainMavIp) inpMainMavIp.addEventListener('input', (e) => handleIpChange(e.target.value));
+    if (inpMavPort) {
+      inpMavPort.addEventListener('input', (e) => {
+        localStorage.setItem('A.S.A.R.D_mavlink_port', e.target.value.trim());
+      });
+    }
+
     if (btnAuto) btnAuto.addEventListener('click', generateLawnmowerGrid);
     if (btnClear) btnClear.addEventListener('click', clearWaypoints);
-    if (btnExport) btnExport.click = exportWaypointsFile;
     if (btnExport) btnExport.addEventListener('click', exportWaypointsFile);
     if (btnAddManual) btnAddManual.addEventListener('click', addManualWaypoint);
-    if (btnTransmit) btnTransmit.addEventListener('click', transmitMission);
+
+    // Primary MAVLink Transmit Triggers
+    if (btnTransmit) btnTransmit.addEventListener('click', () => transmitMission());
+    if (btnMainTransmit) btnMainTransmit.addEventListener('click', () => transmitMission());
+    if (btnTransmitMarked) btnTransmitMarked.addEventListener('click', () => initiateDroneToMarkedCoordinates(20, 10));
+    const btnInitiateMarks = document.getElementById('btnInitiateDroneMarks');
+    if (btnInitiateMarks) btnInitiateMarks.addEventListener('click', () => initiateDroneToMarkedCoordinates(20, 10));
+    if (btnTakeoff) btnTakeoff.addEventListener('click', () => armAndTakeoffMavlink(20));
 
     if (rngAlt) {
       rngAlt.addEventListener('input', (e) => {
@@ -543,7 +600,7 @@ const ViewsManager = (function () {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `AEROSIGHT_Mission_${Date.now()}.waypoints`;
+    a.download = `A.S.A.R.D_Mission_${Date.now()}.waypoints`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -551,12 +608,143 @@ const ViewsManager = (function () {
     window.showToast('Mission Plan: MAVLink .waypoints file exported.');
   }
 
-  function transmitMission() {
-    const btn = document.getElementById('btnTransmitMission');
-    if (!btn) return;
+  function transmitMarkedPlaces() {
+    let places = [];
+    if (window.MapGoogle3DManager && MapGoogle3DManager.getMarkedPlaces) {
+      places = MapGoogle3DManager.getMarkedPlaces();
+    } else {
+      try {
+        places = JSON.parse(localStorage.getItem('A.S.A.R.D_marked_places') || '[]');
+      } catch (e) {}
+    }
 
-    btn.disabled = true;
-    btn.innerHTML = `
+    if (!places || places.length === 0) {
+      if (window.showToast) {
+        window.showToast('⚠️ No marked places found. Click on the 3D Satellite Map to mark tactical points first.');
+      }
+      return;
+    }
+
+    const convertedWps = places.map((p, i) => ({
+      id: i + 1,
+      lat: parseFloat(p.lat),
+      lon: parseFloat(p.lng || p.lon),
+      alt: 20,
+      speed: 10,
+      action: `Tactical Mark: ${p.name || 'Waypoint'}`
+    }));
+
+    waypoints = convertedWps;
+    renderWaypointsOnMap();
+    renderWaypointsTable();
+    updateMissionMetrics();
+
+    initiateDroneToMarkedCoordinates(20, 10);
+  }
+
+  async function initiateDroneToMarkedCoordinates(altitude = 20, speed = 10) {
+    let places = [];
+    if (window.MapGoogle3DManager && MapGoogle3DManager.getMarkedPlaces) {
+      places = MapGoogle3DManager.getMarkedPlaces();
+    } else {
+      try {
+        places = JSON.parse(localStorage.getItem('A.S.A.R.D_marked_places') || '[]');
+      } catch (e) {}
+    }
+
+    let wpsToFly = [];
+    if (places && places.length > 0) {
+      wpsToFly = places.map((p, i) => ({
+        id: i + 1,
+        lat: parseFloat(p.lat),
+        lon: parseFloat(p.lng || p.lon),
+        alt: altitude,
+        speed: speed,
+        action: `Tactical Mark: ${p.name || 'Waypoint'}`
+      }));
+    } else if (Array.isArray(waypoints) && waypoints.length > 0) {
+      wpsToFly = waypoints.map(wp => ({ ...wp, alt: altitude, speed: speed }));
+    } else {
+      wpsToFly = [
+        { id: 1, lat: 10.0235, lon: 78.1236, alt: altitude, speed: speed, action: 'Marked Target Alpha' },
+        { id: 2, lat: 10.0210, lon: 78.1210, alt: altitude, speed: speed, action: 'Marked Target Bravo' },
+        { id: 3, lat: 10.0258, lon: 78.1245, alt: altitude, speed: speed, action: 'Marked Target Charlie' }
+      ];
+    }
+
+    waypoints = wpsToFly;
+    renderWaypointsOnMap();
+    renderWaypointsTable();
+    updateMissionMetrics();
+
+    if (window.showToast) {
+      window.showToast(`🚀 INITIATING: Arming drone, climb to ${altitude}m, speed ${speed} m/s, navigating to ${wpsToFly.length} marked coordinates!`);
+    }
+
+    try {
+      const res = await fetch('/api/drone/initiate-mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          altitude: altitude,
+          speed: speed,
+          waypoints: wpsToFly
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) {
+          window.showToast(`✅ ${data.message}`);
+        }
+        const badgeDroneMavStatus = document.getElementById('badgeDroneMavStatus');
+        if (badgeDroneMavStatus) {
+          badgeDroneMavStatus.textContent = 'AUTO ACTIVE';
+          badgeDroneMavStatus.className = 'status-pill-green';
+        }
+      } else {
+        if (window.showToast) {
+          window.showToast(`⚠️ Drone Mission Notice: ${data?.message || 'Initiation queued'}`);
+        }
+      }
+    } catch (err) {
+      if (window.showToast) {
+        window.showToast(`⚠️ Mission trigger error: ${err.message}`);
+      }
+    }
+  }
+
+  async function transmitMission(customWaypoints) {
+    const btnPlan = document.getElementById('btnTransmitMission');
+    const btnMain = document.getElementById('btnMainTransmitMavlink');
+
+    // Retrieve waypoints to transmit
+    const wpToSend = (Array.isArray(customWaypoints) && customWaypoints.length > 0) ? customWaypoints : waypoints;
+    if (!wpToSend || wpToSend.length === 0) {
+      if (window.showToast) window.showToast('⚠️ No waypoints defined! Add waypoints or generate a search grid first.');
+      return;
+    }
+
+    // Retrieve target IP and Port (multi-system network support)
+    const targetIp = (
+      document.getElementById('mavTargetIp')?.value || 
+      document.getElementById('mainMavTargetIp')?.value || 
+      localStorage.getItem('A.S.A.R.D_mavlink_ip') || 
+      '127.0.0.1'
+    ).trim();
+
+    const targetPort = parseInt(
+      document.getElementById('mavTargetPort')?.value || 
+      localStorage.getItem('A.S.A.R.D_mavlink_port') || 
+      '14550', 
+      10
+    );
+
+    // Save target IP & Port
+    localStorage.setItem('A.S.A.R.D_mavlink_ip', targetIp);
+    localStorage.setItem('A.S.A.R.D_mavlink_port', String(targetPort));
+
+    // Button loading states
+    const spinHtml = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin-icon">
         <line x1="12" y1="2" x2="12" y2="6"></line>
         <line x1="12" y1="18" x2="12" y2="22"></line>
@@ -567,17 +755,129 @@ const ViewsManager = (function () {
         <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
         <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
       </svg>
-      <span>TRANSMITTING ${waypoints.length} WAYPOINTS (UPLINK 868MHz)...</span>
+      <span>TRANSMITTING TO ${targetIp}:${targetPort} (MAVLINK)...</span>
     `;
 
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        <span>TRANSMIT MISSION TO DRONE (UPLOAD WP)</span>
-      `;
-      window.showToast(`SUCCESS: ${waypoints.length} Waypoints uploaded to Pixhawk 6X autopilot!`);
-    }, 1800);
+    if (btnPlan) {
+      btnPlan.disabled = true;
+      btnPlan.innerHTML = spinHtml;
+    }
+    if (btnMain) {
+      btnMain.disabled = true;
+      btnMain.innerHTML = `<span>TRANSMITTING (${targetIp})...</span>`;
+    }
+
+    if (window.showToast) {
+      window.showToast(`📡 Transmitting ${wpToSend.length} waypoints across network to Mission Planner (${targetIp}:${targetPort})...`);
+    }
+
+    try {
+      const response = await fetch('/api/mavlink/transmit_mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_host: targetIp,
+          target_port: targetPort,
+          waypoints: wpToSend,
+          auto_start: false
+        })
+      });
+
+      const data = await response.json();
+
+      if (data && data.success) {
+        if (window.showToast) {
+          window.showToast(`✅ ${data.message || 'Mission uploaded successfully'} (${data.waypoints} waypoints, sys=${data.target_system})`);
+        }
+      } else {
+        if (window.showToast) {
+          window.showToast(`❌ MAVLink Error: ${data?.message || data?.error || 'Mission upload rejected'}`);
+        }
+      }
+    } catch (err) {
+      console.error('[ViewsManager] MAVLink transmission error:', err);
+      if (window.showToast) {
+        window.showToast(`⚠️ Uplink error: ${err.message}. Check remote endpoint (${targetIp})`);
+      }
+    } finally {
+      if (btnPlan) {
+        btnPlan.disabled = false;
+        btnPlan.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>TRANSMIT TO MISSION PLANNER (START AUTONOMOUS FLIGHT)</span>
+        `;
+      }
+      if (btnMain) {
+        btnMain.disabled = false;
+        btnMain.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M4.93 19.07a10 10 0 0 1 0-14.14M7.76 16.24a6 6 0 0 1 0-8.48M12 12h.01"></path>
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.48M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <span>TRANSMIT MISSION (MAVLINK AUTO)</span>
+        `;
+      }
+    }
+  }
+
+  async function armAndTakeoffMavlink(altitude = 20) {
+    const btn = document.getElementById('btnMainMavlinkTakeoff');
+    const targetConn = (
+      document.getElementById('mainMavTargetIp')?.value || 
+      document.getElementById('mavTargetIp')?.value || 
+      localStorage.getItem('A.S.A.R.D_mavlink_ip') || 
+      'tcp:10.10.95.188:5762'
+    ).trim();
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>TAKING OFF (${altitude}M)...</span>`;
+    }
+
+    if (window.showToast) {
+      window.showToast(`🚀 Sending GUIDED Mode, ARM & TAKEOFF (${altitude}m) to ${targetConn}...`);
+    }
+
+    try {
+      const res = await fetch('/api/mavlink/takeoff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          connection: targetConn,
+          altitude: altitude
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        const selFlightMode = document.getElementById('flightModeSelect');
+        if (selFlightMode) selFlightMode.value = 'GUIDED';
+        const statusText = document.getElementById('flightStatusText');
+        if (statusText) statusText.textContent = 'IN FLIGHT (GUIDED)';
+        if (window.TelemetryManager && TelemetryManager.updateTelemetry) {
+          TelemetryManager.updateTelemetry({
+            status: 'IN FLIGHT',
+            flightMode: 'GUIDED',
+            altitude: altitude
+          });
+        }
+        if (window.showToast) {
+          window.showToast(`✅ ARMED & TAKEOFF SUCCESSFUL: Drone ascending to ${altitude}m via ${targetConn}! Mode: GUIDED`);
+        }
+      } else {
+        if (window.showToast) window.showToast(`⚠️ Takeoff notice: ${data?.message}`);
+      }
+    } catch (err) {
+      if (window.showToast) window.showToast(`⚠️ Takeoff error: ${err.message}`);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          <span>ARM & TAKEOFF (20M)</span>
+        `;
+      }
+    }
   }
 
   // =========================================================================
@@ -727,7 +1027,7 @@ const ViewsManager = (function () {
     cx.fillRect(10, 440, 400, 32);
     cx.font = 'bold 12px Rajdhani, sans-serif';
     cx.fillStyle = '#00d2ff';
-    cx.fillText(`AEROSIGHT UAV • 10.0235° N, 78.1236° E • ${timeStr} UTC+5:30`, 16, 460);
+    cx.fillText(`A.S.A.R.D UAV • 10.0235° N, 78.1236° E • ${timeStr} UTC+5:30`, 16, 460);
 
     const dataUrl = c.toDataURL('image/jpeg', 0.92);
     const snapId = `SNAP-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -813,38 +1113,367 @@ const ViewsManager = (function () {
 
     setupKeyboardControls();
 
-    // Quick action buttons
+    // =========================================================================
+    // Mission Planner / ArduPilot Route Transmit & Connect in Drone Control
+    // =========================================================================
+    const btnDroneConnectMav = document.getElementById('btnDroneCtrlConnectMav');
+    const btnDroneTransmitRoute = document.getElementById('btnDroneCtrlTransmitRoute');
+    const inpDroneIp = document.getElementById('droneCtrlMavIp');
+    const inpDronePort = document.getElementById('droneCtrlMavPort');
+    const selDroneProto = document.getElementById('droneCtrlMavProto');
+    const badgeDroneMavStatus = document.getElementById('droneCtrlMavStatusBadge');
+    const lblDroneRouteSummary = document.getElementById('droneCtrlRouteSummary');
+
+    // Fetch local PC IP dynamically to show on UI
+    fetch('/api/network-info').then(r => r.json()).then(info => {
+      const lbl = document.getElementById('thisDashboardIpLabel');
+      if (lbl && (info.primaryIp || info.defaultUrl)) {
+        lbl.textContent = info.primaryIp || '172.27.172.218';
+      }
+    }).catch(() => {});
+
+    // Populate initial inputs from localStorage if present
+    if (inpDroneIp) {
+      inpDroneIp.value = localStorage.getItem('A.S.A.R.D_mavlink_ip') || '172.27.172.87';
+    }
+    if (inpDronePort && localStorage.getItem('A.S.A.R.D_mavlink_port')) {
+      inpDronePort.value = localStorage.getItem('A.S.A.R.D_mavlink_port');
+    }
+
+    // Refresh route summary badge
+    function updateDroneRouteSummary() {
+      if (!lblDroneRouteSummary) return;
+      let count = 0;
+      if (window.MapGoogle3DManager && MapGoogle3DManager.getMarkedPlaces) {
+        const places = MapGoogle3DManager.getMarkedPlaces();
+        if (places && places.length > 0) count = places.length;
+      }
+      if (count === 0 && Array.isArray(waypoints) && waypoints.length > 0) {
+        count = waypoints.length;
+      }
+      if (count > 0) {
+        lblDroneRouteSummary.innerHTML = `Route Ready: <strong style="color: var(--orange-primary);">${count} tactical waypoints</strong> prepared for Mission Planner upload`;
+      } else {
+        lblDroneRouteSummary.innerHTML = `No custom pins yet. Transmit will dispatch default tactical reconnaissance route (or mark places on Satellite Map)`;
+      }
+    }
+    updateDroneRouteSummaryGlobal = updateDroneRouteSummary;
+    updateDroneRouteSummary();
+
+    // Connect / Ping button
+    if (btnDroneConnectMav) {
+      btnDroneConnectMav.addEventListener('click', async () => {
+        const ip = (inpDroneIp ? inpDroneIp.value : '172.27.172.87').trim();
+        const port = parseInt(inpDronePort ? inpDronePort.value : '14550', 10);
+        const proto = selDroneProto ? selDroneProto.value : 'udp';
+
+        localStorage.setItem('A.S.A.R.D_mavlink_ip', ip);
+        localStorage.setItem('A.S.A.R.D_mavlink_port', String(port));
+
+        if (badgeDroneMavStatus) {
+          badgeDroneMavStatus.textContent = 'TESTING...';
+          badgeDroneMavStatus.className = 'status-pill-amber';
+        }
+
+        try {
+          const res = await fetch('/api/mavlink/ping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_host: ip, target_port: port, proto: proto })
+          });
+          const data = await res.json();
+          if (data && data.connected) {
+            if (badgeDroneMavStatus) {
+              badgeDroneMavStatus.textContent = 'CONNECTED';
+              badgeDroneMavStatus.className = 'status-pill-green';
+            }
+            if (window.showToast) window.showToast(`✅ ${data.message}`);
+          } else {
+            if (badgeDroneMavStatus) {
+              badgeDroneMavStatus.textContent = 'UNREACHABLE';
+              badgeDroneMavStatus.className = 'status-pill-amber';
+            }
+            if (window.showToast) window.showToast(`⚠️ ${data.message || 'Mission Planner not detected.'}`);
+          }
+        } catch (e) {
+          if (badgeDroneMavStatus) {
+            badgeDroneMavStatus.textContent = 'OFFLINE';
+            badgeDroneMavStatus.className = 'status-pill-amber';
+          }
+          if (window.showToast) window.showToast(`⚠️ Connection test failed: ${e.message}`);
+        }
+      });
+    }
+
+    // Transmit Route Button
+    if (btnDroneTransmitRoute) {
+      btnDroneTransmitRoute.addEventListener('click', async () => {
+        const ip = (inpDroneIp ? inpDroneIp.value : '172.27.172.87').trim();
+        const port = parseInt(inpDronePort ? inpDronePort.value : '14550', 10);
+        const proto = selDroneProto ? selDroneProto.value : 'udp';
+
+        // Retrieve route data from 3D Satellite Map marked places or mission planner waypoints
+        let routeWps = [];
+        if (window.MapGoogle3DManager && MapGoogle3DManager.getMarkedPlaces) {
+          const marked = MapGoogle3DManager.getMarkedPlaces();
+          if (marked && marked.length > 0) {
+            routeWps = marked.map((p, i) => ({
+              id: i + 1,
+              lat: parseFloat(p.lat),
+              lon: parseFloat(p.lng || p.lon),
+              alt: 20,
+              speed: 10,
+              action: `Tactical Mark: ${p.name || 'Waypoint'}`
+            }));
+          }
+        }
+
+        if (routeWps.length === 0 && Array.isArray(waypoints) && waypoints.length > 0) {
+          routeWps = waypoints;
+        }
+
+        // If no route waypoints exist yet, prompt to define or generate fallback route from active target
+        if (routeWps.length === 0) {
+          routeWps = [
+            { id: 1, lat: 9.5440, lon: 78.6920, alt: 20, speed: 10, action: 'Nainarkoil Recon #001' },
+            { id: 2, lat: 9.5475, lon: 78.6925, alt: 20, speed: 10, action: 'Perimeter Scan B-2' },
+            { id: 3, lat: 9.5480, lon: 78.6965, alt: 20, speed: 10, action: 'Thermal Point Return' },
+            { id: 4, lat: 9.5456, lon: 78.6945, alt: 20, speed: 10, action: 'Nainarkoil Base WP' }
+          ];
+        }
+
+        const origHtml = btnDroneTransmitRoute.innerHTML;
+        btnDroneTransmitRoute.disabled = true;
+        btnDroneTransmitRoute.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin-icon">
+            <line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+          </svg>
+          <span>SENDING ${routeWps.length} ROUTE POINTS...</span>
+        `;
+
+        if (badgeDroneMavStatus) {
+          badgeDroneMavStatus.textContent = 'TRANSMITTING';
+          badgeDroneMavStatus.className = 'status-pill-amber';
+        }
+
+        if (window.showToast) {
+          window.showToast(`🛰️ Transmitting ${routeWps.length} route waypoints to Mission Planner (${ip}:${port})...`);
+        }
+
+        try {
+          const connStr = (proto === 'tcp') ? `tcp:${ip}:${port}` : `udpout:${ip}:${port}`;
+          const res = await fetch('/api/mavlink/transmit_mission', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              target_host: ip,
+              target_port: port,
+              connection: connStr,
+              waypoints: routeWps,
+              auto_start: false
+            })
+          });
+
+          const data = await res.json();
+          if (data && data.success) {
+            if (badgeDroneMavStatus) {
+              badgeDroneMavStatus.textContent = 'VERIFIED';
+              badgeDroneMavStatus.className = 'status-pill-green';
+            }
+            if (window.showToast) {
+              window.showToast(`✅ ${data.message || 'Mission uploaded successfully'} (${data.waypoints} waypoints, sys=${data.target_system})`);
+            }
+          } else {
+            if (badgeDroneMavStatus) {
+              badgeDroneMavStatus.textContent = 'ERROR';
+              badgeDroneMavStatus.className = 'status-pill-amber';
+            }
+            if (window.showToast) {
+              window.showToast(`❌ MAVLink Error: ${data?.message || data?.error || 'Mission upload rejected'}`);
+            }
+          }
+        } catch (err) {
+          if (badgeDroneMavStatus) {
+            badgeDroneMavStatus.textContent = 'OFFLINE';
+            badgeDroneMavStatus.className = 'status-pill-amber';
+          }
+          if (window.showToast) {
+            window.showToast(`❌ Route transmission failed: ${err.message}`);
+          }
+        } finally {
+          btnDroneTransmitRoute.disabled = false;
+          btnDroneTransmitRoute.innerHTML = origHtml;
+          updateDroneRouteSummary();
+        }
+      });
+    }
+
+    // Flight Action & Arming Controls
+    const btnArm = document.getElementById('btnCtrlArm');
+    const btnDisarm = document.getElementById('btnCtrlDisarm');
     const btnTakeoff = document.getElementById('btnCtrlTakeoff');
     const btnHold = document.getElementById('btnCtrlHold');
     const btnOrbit = document.getElementById('btnCtrlOrbit');
     const btnRtl = document.getElementById('btnCtrlRtl');
     const btnEmergency = document.getElementById('btnCtrlEmergencyLand');
 
+    const getMavTargetParams = () => {
+      const ip = (inpDroneIp ? inpDroneIp.value : '172.27.172.87').trim();
+      const port = parseInt(inpDronePort ? inpDronePort.value : '14550', 10);
+      const proto = selDroneProto ? selDroneProto.value : 'udp';
+      const conn = (proto === 'tcp') ? `tcp:${ip}:${port}` : `udpout:${ip}:${port}`;
+      return { target_host: ip, target_port: port, connection: conn };
+    };
+
+    if (btnArm) {
+      btnArm.addEventListener('click', async () => {
+        window.showToast('⚡ Arming motors and initiating takeoff to 20m (preventing auto-disarm)...');
+        try {
+          // Trigger arming, automated climb to 20m, and speed 10 m/s navigation
+          const res = await fetch('/api/drone/initiate-mission', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...getMavTargetParams(),
+              altitude: 20,
+              speed: 10
+            })
+          });
+          const data = await res.json();
+          if (data && data.success) {
+            window.showToast(`✅ ${data.message || 'Drone ARMED & Airborne at 20m!'}`);
+            if (badgeDroneMavStatus) {
+              badgeDroneMavStatus.textContent = 'ARMED & FLYING';
+              badgeDroneMavStatus.className = 'status-pill-green';
+            }
+          } else {
+            // Fallback to direct arming if mission initiation returned notice
+            const armRes = await fetch('/api/mavlink/arm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(getMavTargetParams())
+            });
+            const armData = await armRes.json();
+            if (armData && armData.success) {
+              window.showToast('✅ Drone Motors ARMED');
+            } else {
+              window.showToast(`⚠️ Arming notice: ${armData?.message || data?.message}`);
+            }
+          }
+        } catch (e) {
+          window.showToast(`❌ Error: ${e.message}`);
+        }
+      });
+    }
+
+    if (btnDisarm) {
+      btnDisarm.addEventListener('click', async () => {
+        window.showToast('🛑 Sending DISARM command...');
+        try {
+          const res = await fetch('/api/mavlink/disarm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getMavTargetParams())
+          });
+          const data = await res.json();
+          window.showToast(`✅ ${data.message || 'Drone Motors DISARMED'}`);
+          if (badgeDroneMavStatus) {
+            badgeDroneMavStatus.textContent = 'STANDBY';
+            badgeDroneMavStatus.className = 'status-pill-amber';
+          }
+        } catch (e) {
+          window.showToast(`❌ Error sending DISARM command: ${e.message}`);
+        }
+      });
+    }
+
     if (btnTakeoff) {
-      btnTakeoff.addEventListener('click', () => {
-        window.showToast('Autopilot: Initiating automated vertical takeoff to 2.5m AGL...');
+      btnTakeoff.addEventListener('click', async () => {
+        window.showToast('🚀 Initiating automated vertical takeoff to 20m AGL...');
+        try {
+          const res = await fetch('/api/mavlink/takeoff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...getMavTargetParams(), altitude: 20 })
+          });
+          const data = await res.json();
+          if (data && data.success) {
+            window.showToast(`✅ ${data.message || 'Drone ARMED & TAKEOFF initiated!'}`);
+          } else {
+            window.showToast(`⚠️ Takeoff Failed: ${data?.message || data?.error || 'Rejected'}`);
+          }
+        } catch (e) {
+          window.showToast(`❌ Error initiating Takeoff: ${e.message}`);
+        }
       });
     }
+
     if (btnHold) {
-      btnHold.addEventListener('click', () => {
-        window.showToast('Flight Mode: Position & Altitude GPS Hold Engaged.');
+      btnHold.addEventListener('click', async () => {
+        window.showToast('Engaging Position Hold (LOITER)...');
+        try {
+          const res = await fetch('/api/mavlink/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...getMavTargetParams(), mode: 'LOITER' })
+          });
+          const data = await res.json();
+          window.showToast(`✅ ${data.message || 'Mode set to LOITER'}`);
+        } catch (e) {
+          window.showToast(`❌ Mode error: ${e.message}`);
+        }
       });
     }
+
     if (btnOrbit) {
-      btnOrbit.addEventListener('click', () => {
-        window.showToast('Orbiting Target #001: Radius 15m, Clockwise 2m/s.');
+      btnOrbit.addEventListener('click', async () => {
+        window.showToast('Engaging CIRCLE Orbit Mode...');
+        try {
+          const res = await fetch('/api/mavlink/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...getMavTargetParams(), mode: 'CIRCLE' })
+          });
+          const data = await res.json();
+          window.showToast(`✅ ${data.message || 'Mode set to CIRCLE'}`);
+        } catch (e) {
+          window.showToast(`❌ Orbit error: ${e.message}`);
+        }
       });
     }
+
     if (btnRtl) {
-      btnRtl.addEventListener('click', () => {
-        window.showToast('EMERGENCY RTL: Returning to Madurai Launch Base Coordinate.');
+      btnRtl.addEventListener('click', async () => {
+        window.showToast('EMERGENCY RTL: Returning to Launch Coordinate...');
+        try {
+          const res = await fetch('/api/mavlink/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...getMavTargetParams(), mode: 'RTL' })
+          });
+          const data = await res.json();
+          window.showToast(`✅ ${data.message || 'RTL Engaged'}`);
+        } catch (e) {
+          window.showToast(`❌ RTL error: ${e.message}`);
+        }
       });
     }
+
     if (btnEmergency) {
-      btnEmergency.addEventListener('click', () => {
+      btnEmergency.addEventListener('click', async () => {
         const confirmed = confirm('CRITICAL WARNING: This will immediately cut power to all 4 motors. Confirm motor kill?');
         if (confirmed) {
           window.showToast('MOTORS KILLED: Safety override engaged.');
+          try {
+            await fetch('/api/mavlink/disarm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(getMavTargetParams())
+            });
+          } catch (e) {}
         }
       });
     }
@@ -1055,7 +1684,11 @@ const ViewsManager = (function () {
     init: init,
     switchView: switchView,
     removeWaypoint: removeWaypoint,
-    openSnapshot: openSnapshot
+    openSnapshot: openSnapshot,
+    transmitMission: transmitMission,
+    transmitMarkedPlaces: transmitMarkedPlaces,
+    armAndTakeoffMavlink: armAndTakeoffMavlink,
+    initiateDroneToMarkedCoordinates: initiateDroneToMarkedCoordinates
   };
 })();
 

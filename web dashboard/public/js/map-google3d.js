@@ -1,24 +1,15 @@
-/**
- * AEROSIGHT - Google 3D Satellite Map Module
- * Pure Google Maps JavaScript API (Satellite / Hybrid 3D Aerial View)
- * Direct Google Earth / Google Maps 3D experience with:
- * 1. Native Google Photorealistic Satellite & Hybrid imagery with roads, buildings, & labels
- * 2. 3D oblique tilt (45°-67.5°) & 360° compass heading rotation
- * 3. Intuitive Place Marking ("Mark the Place") with custom tactical categories
- * 4. Place Search (Google Geocoder + Coordinates search)
- * 5. Autonomous Survey Area perimeter polygon with live area calculation
- * 6. Real-time Drone Telemetry tracking & radar sweep on Google Satellite
- * 7. AI Victim Detections plotting with target detail sync
- */
+
 
 const MapGoogle3DManager = (function () {
   let googleMap = null;
+  let leafletMap = null;
   let isMapInitialized = false;
   let googleDroneMarker = null;
+  let leafletDroneMarker = null;
   let userGpsMarker = null;
 
   // Viewport State
-  let currentCenter = { lat: 10.0235, lng: 78.1236 }; // Madurai Disaster Sector B default
+  let currentCenter = { lat: 9.5456, lng: 78.6945 }; // Nainarkoil, Ramanathapuram
   let currentZoom = 17;
   let currentTilt = 45; // 3D oblique tilt
   let currentHeading = 35; // Compass heading
@@ -26,7 +17,7 @@ const MapGoogle3DManager = (function () {
 
   // Place Marking State
   let isMarkingMode = false;
-  let markedPlaces = []; // Array of { id, name, category, lat, lng, alt, notes, timestamp, gMarker, infoWindow }
+  let markedPlaces = []; // Array of { id, name, category, lat, lng, alt, notes, timestamp, gMarker, infoWindow, lMarker }
   let pendingCoords = null;
 
   // Area Perimeter Marking State
@@ -60,14 +51,126 @@ const MapGoogle3DManager = (function () {
     loadStoredPlaces();
     setupDOMControls();
 
-    // Check if Google Maps JS API is already loaded in page
-    if (window.google && window.google.maps) {
+    const apiKey = localStorage.getItem('aerosight_google_api_key') || '';
+    if (apiKey && window.google && window.google.maps) {
+      buildGoogleMap();
+    } else if (window.L) {
+      buildLeafletMap();
+    } else if (window.google && window.google.maps) {
       buildGoogleMap();
     } else {
       loadGoogleMapsApiScript();
     }
 
     setupDroneTelemetry();
+  }
+
+  // Handle Google Maps authentication failures gracefully
+  window.gm_authFailure = function () {
+    console.warn('[Google3D] Google Maps key missing/invalid. Switching to Leaflet Satellite map.');
+    if (!leafletMap && window.L) {
+      buildLeafletMap();
+    }
+  };
+
+  function buildLeafletMap() {
+    const container = document.getElementById('google3dMap');
+    if (!container || leafletMap) return;
+
+    try {
+      container.innerHTML = '';
+      leafletMap = L.map('google3dMap', {
+        center: [currentCenter.lat, currentCenter.lng],
+        zoom: currentZoom,
+        zoomControl: false,
+        attributionControl: false,
+        maxZoom: 19
+      });
+
+      // ArcGIS World Imagery Satellite Tiles (Real photorealistic satellite)
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'ArcGIS Satellite'
+      }).addTo(leafletMap);
+
+      // CartoDB Dark Tactical Labels Overlay
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 19,
+        opacity: 0.75
+      }).addTo(leafletMap);
+
+      isMapInitialized = true;
+
+      setupLeafletEventListeners();
+      setupLeafletDroneMarker();
+      renderAllMarkedPlaces();
+      updateOsdCoordinates();
+
+      setTimeout(() => {
+        if (leafletMap) leafletMap.invalidateSize();
+      }, 200);
+
+      if (window.showToast) {
+        window.showToast('🌍 Satellite Map Online (ArcGIS High-Resolution Imagery)');
+      }
+    } catch (err) {
+      console.warn('[Leaflet] Init error:', err);
+    }
+  }
+
+  function setupLeafletEventListeners() {
+    if (!leafletMap) return;
+
+    leafletMap.on('click', (e) => {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      if (isAreaMarkingMode) {
+        addAreaPoint(lat, lng);
+        return;
+      }
+
+      if (isMarkingMode) {
+        openPlaceCreationModal(lat, lng);
+        setMarkingMode(false);
+        return;
+      }
+    });
+
+    leafletMap.on('mousemove', (e) => {
+      const coordsEl = document.getElementById('mapCursorCoords');
+      if (coordsEl && e.latlng) {
+        coordsEl.textContent = `${e.latlng.lat.toFixed(5)}° N, ${e.latlng.lng.toFixed(5)}° E`;
+      }
+    });
+
+    leafletMap.on('move', () => {
+      const center = leafletMap.getCenter();
+      currentCenter = { lat: center.lat, lng: center.lng };
+      updateOsdCoordinates();
+    });
+  }
+
+  function setupLeafletDroneMarker() {
+    if (!leafletMap || !window.L || leafletDroneMarker) return;
+
+    const droneIcon = L.divIcon({
+      className: 'leaflet-drone-icon',
+      html: `
+        <div style="position:relative; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+          <svg class="drone-leaflet-svg" width="32" height="32" viewBox="0 0 40 40">
+            <polygon points="20,4 36,36 20,28 4,36" fill="#00e5ff" stroke="#ffffff" stroke-width="2"/>
+            <circle cx="20" cy="20" r="3" fill="#ffffff"/>
+          </svg>
+          <div style="position:absolute; width:44px; height:44px; border:2px solid #00d2ff; border-radius:50%; animation:marker-pulse 1.8s infinite;"></div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+
+    leafletDroneMarker = L.marker([currentCenter.lat, currentCenter.lng], { icon: droneIcon, zIndexOffset: 1000 }).addTo(leafletMap);
   }
 
   function loadGoogleMapsApiScript() {
@@ -82,7 +185,7 @@ const MapGoogle3DManager = (function () {
     script.id = 'googleMapsApiScript';
     script.async = true;
     script.defer = true;
-    
+
     // Load official Google Maps API with places, geometry, and drawing libraries
     let apiUrl = 'https://maps.googleapis.com/maps/api/js?v=weekly&libraries=places,geometry,drawing';
     if (apiKey) {
@@ -96,10 +199,8 @@ const MapGoogle3DManager = (function () {
 
     script.src = apiUrl;
     script.onerror = () => {
-      console.warn('[Google3D] Google Maps script loading error.');
-      if (window.showToast) {
-        window.showToast('⚠️ Google Maps API failed to load. Check internet or API key.');
-      }
+      console.warn('[Google3D] Google Maps script loading error. Switching to Leaflet.');
+      if (window.L) buildLeafletMap();
     };
 
     document.head.appendChild(script);
@@ -154,6 +255,7 @@ const MapGoogle3DManager = (function () {
       }
     } catch (err) {
       console.error('[Google3D] Error building Google Map:', err);
+      if (window.L) buildLeafletMap();
     }
   }
 
@@ -431,7 +533,7 @@ const MapGoogle3DManager = (function () {
         timestamp: p.timestamp
       }));
       localStorage.setItem('aerosight_google3d_places', JSON.stringify(serializable));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function loadStoredPlaces() {
@@ -604,12 +706,12 @@ const MapGoogle3DManager = (function () {
     if (!googleMap) return;
 
     const pathCoords = [
-      { lat: 10.0215, lng: 78.1210 },
-      { lat: 10.0255, lng: 78.1215 },
-      { lat: 10.0258, lng: 78.1245 },
-      { lat: 10.0218, lng: 78.1242 },
-      { lat: 10.0235, lng: 78.1265 },
-      { lat: 10.0210, lng: 78.1210 }
+      { lat: 9.5440, lng: 78.6920 },
+      { lat: 9.5475, lng: 78.6925 },
+      { lat: 9.5480, lng: 78.6965 },
+      { lat: 9.5445, lng: 78.6960 },
+      { lat: 9.5456, lng: 78.6945 },
+      { lat: 9.5440, lng: 78.6920 }
     ];
 
     flightPathLine = new google.maps.Polyline({
@@ -723,7 +825,7 @@ const MapGoogle3DManager = (function () {
           return;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function onUserLocationFound(lat, lng, label) {
@@ -1053,6 +1155,7 @@ const MapGoogle3DManager = (function () {
     flyToPlace,
     deletePlace,
     clearAllMarks,
+    getMarkedPlaces: () => markedPlaces,
     updateDronePosition,
     recenterOnDrone,
     addVictimMarker,

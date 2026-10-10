@@ -1,7 +1,7 @@
 /**
- * AEROSIGHT - Selected Target Details Module
- * Manages target preview image, telemetry metadata, copy coordinates,
- * View on Map, Notify Rescue Team, and Mark as Rescued actions.
+ * A.S.A.R.D - Target Details & Forensic Snapshot Viewer Module
+ * Manages selected victim reconnaissance metadata and high-resolution
+ * snapshot inspection with OpenCV red-box reticle & disaster classification.
  */
 
 const TargetDetailsManager = (() => {
@@ -9,6 +9,49 @@ const TargetDetailsManager = (() => {
 
   function init() {
     setupButtons();
+    setupSnapshotModalHandlers();
+
+    // Default seed target (#V001 with OpenCV red-box reticle snapshot)
+    updateTarget({
+      id: '#V001',
+      victim_id: 'V001',
+      type: 'Person',
+      label: 'Person (Victim #V001)',
+      confidence: 94,
+      locationStr: '10.0234° N, 78.1234° E',
+      rescueCoordsStr: '10.0234° N, 78.1234° E',
+      altitude: '35 m',
+      priority: 'CRITICAL',
+      priority_explanation: 'OpenCV Red-Reticle AI Detected | Single Verified Target',
+      time: new Date().toTimeString().split(' ')[0],
+      status: 'Not Rescued',
+      disaster_type: 'Earthquake (Structural Collapse)',
+      image: '/assets/victim_v001_snapshot.jpg',
+      snapshot: '/assets/victim_v001_snapshot.jpg',
+      deduplication_status: 'Single Verified Target (No Duplication)'
+    });
+  }
+
+  function getFallbackTarget() {
+    if (currentTarget) return currentTarget;
+    if (window.detections && window.detections.length > 0) return window.detections[0];
+    return {
+      id: '#V001',
+      victim_id: 'V001',
+      type: 'Person',
+      label: 'Person (Victim #V001)',
+      confidence: 94,
+      locationStr: '10.0234° N, 78.1234° E',
+      rescueCoordsStr: '10.0234° N, 78.1234° E',
+      altitude: '35 m',
+      priority: 'CRITICAL',
+      time: new Date().toTimeString().split(' ')[0],
+      status: 'Not Rescued',
+      disaster_type: 'Earthquake (Structural Collapse)',
+      image: '/assets/victim_v001_snapshot.jpg',
+      snapshot: '/assets/victim_v001_snapshot.jpg',
+      deduplication_status: 'Single Verified Target (No Duplication)'
+    };
   }
 
   function setupButtons() {
@@ -16,73 +59,35 @@ const TargetDetailsManager = (() => {
     const copyBtn = document.getElementById('copyCoordsBtn');
     if (copyBtn) {
       copyBtn.addEventListener('click', () => {
-        if (currentTarget && currentTarget.rescueCoordsStr && currentTarget.rescueCoordsStr !== '-') {
-          navigator.clipboard.writeText(currentTarget.rescueCoordsStr);
+        const target = getFallbackTarget();
+        if (target && target.rescueCoordsStr && target.rescueCoordsStr !== '-') {
+          navigator.clipboard.writeText(target.rescueCoordsStr);
           if (window.showToast) {
-            window.showToast(`Rescue Coordinates copied: ${currentTarget.rescueCoordsStr}`);
+            window.showToast(`Rescue Coordinates copied: ${target.rescueCoordsStr}`);
           }
         }
       });
     }
 
-    // View on Map Button
-    const viewMapBtn = document.getElementById('btnViewOnMap');
-    if (viewMapBtn) {
-      viewMapBtn.addEventListener('click', () => {
-        if (!currentTarget) return;
-        if (window.Map2DManager && currentTarget.lat && currentTarget.lon) {
-          window.Map2DManager.panToLocation(currentTarget.lat, currentTarget.lon);
-        }
-        if (window.Map3DManager && currentTarget.lat && currentTarget.lon) {
-          window.Map3DManager.focusTarget(currentTarget.lat, currentTarget.lon);
-        }
-        if (window.showToast) {
-          window.showToast(`Target ${currentTarget.id} centered in tactical live map view.`);
-        }
+    // PRIMARY ACTION: View Forensic Optical Snapshot
+    const viewSnapshotBtn = document.getElementById('btnViewSnapshot');
+    if (viewSnapshotBtn) {
+      viewSnapshotBtn.addEventListener('click', () => {
+        const target = getFallbackTarget();
+        openSnapshotViewer(target);
       });
     }
 
-    // Notify Rescue Team Button -> Opens Modal
-    const notifyBtn = document.getElementById('btnNotifyRescue');
-    if (notifyBtn) {
-      notifyBtn.addEventListener('click', () => {
-        if (!currentTarget) return;
-        openRescueModal(currentTarget);
+    // Clicking target image box also opens snapshot viewer
+    const targetImg = document.getElementById('selectedTargetImg');
+    if (targetImg) {
+      targetImg.style.cursor = 'pointer';
+      targetImg.title = 'Click to view full forensic snapshot with red bounding box';
+      targetImg.addEventListener('click', () => {
+        const target = getFallbackTarget();
+        openSnapshotViewer(target);
       });
     }
-
-    // Mark as Rescued Button
-    const markBtn = document.getElementById('btnMarkRescued');
-    if (markBtn) {
-      markBtn.addEventListener('click', async () => {
-        if (!currentTarget) return;
-        const newStatus = currentTarget.status === 'Rescued' ? 'Not Rescued' : 'Rescued';
-        currentTarget.status = newStatus;
-        updateTarget(currentTarget);
-
-        if (window.DetectionsManager) {
-          window.DetectionsManager.updateTargetStatus(currentTarget.id, newStatus);
-        }
-
-        // Call backend API
-        try {
-          await fetch(`/api/detections/${encodeURIComponent(currentTarget.id)}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-          });
-        } catch (e) {
-          console.warn("Status update fallback", e);
-        }
-
-        if (window.showToast) {
-          window.showToast(`Target ${currentTarget.id} updated to: ${newStatus}`);
-        }
-      });
-    }
-
-    // Modal Close and Dispatch handlers
-    setupModalHandlers();
   }
 
   function updateTarget(target) {
@@ -97,8 +102,11 @@ const TargetDetailsManager = (() => {
     const altEl = document.getElementById('dtAltitude');
     const timeEl = document.getElementById('dtTime');
     const statusEl = document.getElementById('dtStatus');
+    const disasterEl = document.getElementById('dtDisaster');
+    const dedupEl = document.getElementById('dtDedupStatus');
 
-    if (imgEl && target.image) imgEl.src = target.image;
+    const snapSrc = target.snapshot || target.image || '/assets/victim_v001_snapshot.jpg';
+    if (imgEl) imgEl.src = snapSrc;
     if (idEl) idEl.textContent = target.id;
     if (typeEl) typeEl.textContent = target.label || target.type;
     if (confEl) {
@@ -106,8 +114,16 @@ const TargetDetailsManager = (() => {
     }
     if (locEl) locEl.textContent = target.locationStr;
     if (coordsEl) coordsEl.textContent = target.rescueCoordsStr;
-    if (altEl) altEl.textContent = target.altitude || '120 m';
+    if (altEl) altEl.textContent = target.altitude || '35 m';
     if (timeEl) timeEl.textContent = target.time || '10:42:13';
+
+    if (disasterEl) {
+      disasterEl.textContent = target.disaster_type || 'Earthquake (Structural Collapse)';
+    }
+
+    if (dedupEl) {
+      dedupEl.textContent = target.deduplication_status || 'Single Verified Target (No Duplication)';
+    }
 
     if (statusEl) {
       statusEl.textContent = target.status;
@@ -121,66 +137,110 @@ const TargetDetailsManager = (() => {
     }
   }
 
-  function openRescueModal(target) {
-    const backdrop = document.getElementById('rescueModalBackdrop');
-    const modalTargetId = document.getElementById('modalTargetId');
-    const modalRescueCoords = document.getElementById('modalRescueCoords');
+  function openSnapshotViewer(target) {
+    const activeTarget = target || getFallbackTarget();
+    const backdrop = document.getElementById('snapshotViewerModalBackdrop');
+    if (!backdrop) {
+      console.warn('[TargetDetails] #snapshotViewerModalBackdrop not found in DOM');
+      return;
+    }
 
-    if (modalTargetId) modalTargetId.value = `${target.id} - ${target.label || target.type}`;
-    if (modalRescueCoords) modalRescueCoords.value = target.rescueCoordsStr !== '-' ? target.rescueCoordsStr : target.locationStr;
-    if (backdrop) backdrop.classList.add('show');
+    const snapSrc = activeTarget.snapshot || activeTarget.image || '/assets/victim_v001_snapshot.jpg';
+    const coordsStr = activeTarget.rescueCoordsStr && activeTarget.rescueCoordsStr !== '-' ? activeTarget.rescueCoordsStr : activeTarget.locationStr;
+    const disasterName = activeTarget.disaster_type || 'Earthquake (Structural Collapse)';
+    const confVal = activeTarget.confidence || 94;
+
+    // Set UI elements
+    const titleEl = document.getElementById('modalSnapTitle');
+    const disasterTextEl = document.getElementById('modalSnapDisasterText');
+    const imgEl = document.getElementById('modalSnapImg');
+    const timeEl = document.getElementById('modalSnapTimestamp');
+    const idEl = document.getElementById('modalSnapId');
+    const confEl = document.getElementById('modalSnapConf');
+    const coordsEl = document.getElementById('modalSnapCoords');
+    const priorityEl = document.getElementById('modalSnapPriority');
+    const altEl = document.getElementById('modalSnapAlt');
+    const downloadLink = document.getElementById('btnDownloadSnapshot');
+
+    if (titleEl) titleEl.textContent = `FORENSIC OPTICAL SNAPSHOT - TARGET ${activeTarget.id}`;
+    if (disasterTextEl) {
+      disasterTextEl.textContent = `DISASTER CLASSIFIED: ${disasterName.toUpperCase()} [${confVal}% CONF]`;
+    }
+    if (imgEl) imgEl.src = snapSrc;
+    if (timeEl) timeEl.textContent = `${activeTarget.time || '12:00:00'} UTC`;
+    if (idEl) idEl.textContent = activeTarget.id;
+    if (confEl) confEl.textContent = `${confVal}% (OPENCV AI)`;
+    if (coordsEl) coordsEl.textContent = coordsStr;
+    if (priorityEl) priorityEl.textContent = activeTarget.priority || 'CRITICAL';
+    if (altEl) altEl.textContent = activeTarget.altitude ? (activeTarget.altitude.includes('m') ? activeTarget.altitude : `${activeTarget.altitude} m AGL`) : '35.0 m AGL';
+
+    if (downloadLink) {
+      downloadLink.href = snapSrc;
+      downloadLink.download = `A.S.A.R.D_${activeTarget.id.replace('#', '')}_Forensic_Snapshot.jpg`;
+    }
+
+    backdrop.style.position = 'fixed';
+    backdrop.style.zIndex = '99999';
+    backdrop.style.display = 'flex';
+    backdrop.classList.add('show');
+    backdrop.classList.add('active');
   }
 
-  function setupModalHandlers() {
-    const backdrop = document.getElementById('rescueModalBackdrop');
-    const closeBtn = document.getElementById('modalCloseBtn');
-    const cancelBtn = document.getElementById('modalCancelBtn');
-    const dispatchBtn = document.getElementById('modalDispatchBtn');
+  function closeSnapshotViewer() {
+    const backdrop = document.getElementById('snapshotViewerModalBackdrop');
+    if (backdrop) {
+      backdrop.style.display = 'none';
+      backdrop.classList.remove('show');
+      backdrop.classList.remove('active');
+    }
+  }
 
-    const closeModal = () => {
-      if (backdrop) backdrop.classList.remove('show');
-    };
+  function setupSnapshotModalHandlers() {
+    const backdrop = document.getElementById('snapshotViewerModalBackdrop');
+    const closeBtn = document.getElementById('btnCloseSnapshotModal');
+    const closeFooterBtn = document.getElementById('btnCloseSnapshotModalBtn');
+    const copyCoordsBtn = document.getElementById('btnCopyModalCoords');
+    const copyCoordsBtn2 = document.getElementById('btnCopySnapshotCoords');
 
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeSnapshotViewer);
+    if (closeFooterBtn) closeFooterBtn.addEventListener('click', closeSnapshotViewer);
 
-    if (dispatchBtn) {
-      dispatchBtn.addEventListener('click', async () => {
-        const teamSelect = document.getElementById('modalTeamSelect');
-        const etaInput = document.getElementById('modalEta');
-        const teamName = teamSelect ? teamSelect.value.split(' (')[0] : 'Team Alpha';
-        const eta = etaInput ? etaInput.value : '7 min';
-
-        if (currentTarget) {
-          currentTarget.status = 'En Route';
-          updateTarget(currentTarget);
-          if (window.DetectionsManager) {
-            window.DetectionsManager.updateTargetStatus(currentTarget.id, 'En Route');
-          }
-
-          // Add to Rescue Coordinates Log
-          if (window.RescueLogManager) {
-            window.RescueLogManager.addDispatch({
-              targetId: currentTarget.id,
-              coords: currentTarget.rescueCoordsStr !== '-' ? currentTarget.rescueCoordsStr : currentTarget.locationStr,
-              assignedTeam: teamName,
-              eta: eta
-            });
-          }
-        }
-
-        closeModal();
-        if (window.showToast) {
-          window.showToast(`Rescue Dispatched: ${teamName} assigned to ${currentTarget.id} (ETA ${eta})`);
-        }
+    if (backdrop) {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) closeSnapshotViewer();
       });
     }
+
+    const copyHandler = () => {
+      if (currentTarget) {
+        const coords = currentTarget.rescueCoordsStr && currentTarget.rescueCoordsStr !== '-' 
+          ? currentTarget.rescueCoordsStr 
+          : currentTarget.locationStr;
+        navigator.clipboard.writeText(coords);
+        if (window.showToast) {
+          window.showToast(`GPS Coordinates copied to clipboard: ${coords}`);
+        }
+      }
+    };
+
+    if (copyCoordsBtn) copyCoordsBtn.addEventListener('click', copyHandler);
+    if (copyCoordsBtn2) copyCoordsBtn2.addEventListener('click', copyHandler);
+
+    // Escape key listener to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSnapshotViewer();
+    });
   }
 
   return {
     init,
-    updateTarget
+    updateTarget,
+    showTarget: updateTarget,
+    getCurrentTarget: () => currentTarget,
+    openSnapshotViewer,
+    closeSnapshotViewer
   };
 })();
 
 window.TargetDetailsManager = TargetDetailsManager;
+window.openSnapshotViewer = TargetDetailsManager.openSnapshotViewer;

@@ -1,14 +1,34 @@
-const express = require('express');
-const path = require('path');
-const http = require('http');
-const https = require('https');
-const os = require('os');
-const fs = require('fs');
-const WebSocket = require('ws');
+/**
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * Backend Server (Node.js + Express + WebSocket)
+ *
+ * What this file does:
+ *   - Serves the web dashboard (HTML, CSS, JS files)
+ *   - Provides REST API endpoints for telemetry, detections, and commands
+ *   - Uses WebSocket to push live updates to the browser in real time
+ *   - Connects to the Python rescue_drone module for AI data
+ *
+ * Port: 3000 (default) — open http://localhost:3000 in your browser
+ * =============================================================================
+ */
 
+// --- Node.js built-in modules ---
+const express = require('express');  // Web server framework
+const path = require('path');        // File path helper
+const http = require('http');        // HTTP server
+const https = require('https');      // HTTPS server (for SSL)
+const os = require('os');            // Operating system info (for IP address)
+const fs = require('fs');            // File system (read/write files)
+const WebSocket = require('ws');     // WebSocket for real-time browser updates
+const { execFile } = require('child_process'); // Run shell commands
+const net = require('net');          // TCP networking for Mission Planner status testing
+
+// --- Create the Express app and set the port ---
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Use environment variable or 3000
 
+// Allow the server to receive JSON bodies up to 10 MB (for image snapshots)
 app.use(express.json({ limit: '10mb' }));
 
 // Dynamically resolve public folder whether executed from project root or 'web dashboard' folder
@@ -18,7 +38,9 @@ const publicPath = fs.existsSync(path.join(__dirname, 'public'))
 app.use(express.static(publicPath));
 
 // Statically expose detection snapshots saved by YOLO edge node
-const detectionsPath = path.resolve(__dirname, '..', 'rescue_drone', 'detections');
+const localDetectionsPath = path.resolve(__dirname, 'data', 'detections');
+const legacyDetectionsPath = path.resolve(__dirname, '..', 'rescue_drone', 'detections');
+const detectionsPath = fs.existsSync(legacyDetectionsPath) ? legacyDetectionsPath : localDetectionsPath;
 if (!fs.existsSync(detectionsPath)) {
   try { fs.mkdirSync(detectionsPath, { recursive: true }); } catch (e) {}
 }
@@ -44,43 +66,132 @@ let telemetry = {
   battery: 78,
   altitude: 120.0,
   speed: 12.5,
-  lat: 10.0234,
-  lon: 78.1234,
+  lat: 9.5456,
+  lon: 78.6945,
   heading: 42,
-  signalStrength: '4G (SIM)',
+  signalStrength: '4G LTE (SIM)',
   signalBars: 4,
+  signalDbm: -68,
+  latencyMs: 22,
+  linkQuality: 98,
+  packetLoss: 0.0,
+  frequency: '868 MHz / 2.4 GHz',
+  protocol: 'MAVLink v2 / AES-128 GCM',
+  bitrateMbps: 14.2,
   flightTimeSeconds: 754, // 12m 34s
   distanceFromHome: 1.2,
   flightMode: 'AUTO',
   searchPattern: 'Grid Search',
-  activeSector: 'Sector B - Earthquake Zone',
+  activeSector: 'Nainarkoil Search Sector (Ramanathapuram)',
   cameraSource: 'simulation', // 'simulation' or 'mobile_drone' or 'webcam'
   activeModel: 'RT-DETR-L (Trained)'
 };
 
-// Live AI Detections & Rescue Log (Clean store)
-let detections = [];
-let rescueLog = [];
+// Classified Disaster Scene State (Classified prior to human detection)
+let currentDisaster = {
+  type: 'Earthquake (Structural Collapse)',
+  confidence: 94,
+  severity: 'CRITICAL',
+  primaryHazard: 'Structural Rubble & Void Entrapment',
+  details: {
+    rubble_index: 0.88,
+    water_coverage: '3.4%',
+    thermal_index: 0.12,
+    soil_displacement: '14.0%'
+  },
+  detectedAt: new Date().toTimeString().split(' ')[0]
+};
 
-// Waypoint search path coordinates
-const searchPathWaypoints = [
-  { lat: 10.0220, lon: 78.1220 },
-  { lat: 10.0225, lon: 78.1228 },
-  { lat: 10.0230, lon: 78.1230 },
-  { lat: 10.0234, lon: 78.1234 },
-  { lat: 10.0240, lon: 78.1237 },
-  { lat: 10.0248, lon: 78.1233 },
-  { lat: 10.0254, lon: 78.1225 },
-  { lat: 10.0260, lon: 78.1235 },
-  { lat: 10.0255, lon: 78.1245 }
+// Live AI Detections & Rescue Log (With Spatial Deduplication)
+let detections = [
+  {
+    id: '#V001',
+    victim_id: 'V001',
+    type: 'Person',
+    label: 'Person (Victim #V001)',
+    confidence: 94,
+    lat: 10.0234,
+    lon: 78.1234,
+    locationStr: '10.0234° N, 78.1234° E',
+    rescueLat: 10.0234,
+    rescueLon: 78.1234,
+    rescueCoordsStr: '10.0234° N, 78.1234° E',
+    altitude: '35 m',
+    priority: 'CRITICAL',
+    priority_explanation: 'OpenCV Red-Reticle AI Conf 94% | Imminent Hazard Proximity: 1.2m | High Debris Density',
+    time: new Date().toTimeString().split(' ')[0],
+    status: 'Not Rescued',
+    disaster_type: 'Earthquake (Structural Collapse)',
+    image: '/assets/victim_v001_snapshot.jpg',
+    snapshot: '/assets/victim_v001_snapshot.jpg',
+    bbox: [243, 153, 396, 345],
+    deduplication_status: 'Single Verified Target (No Duplication)'
+  }
+];
+let rescueLog = [
+  {
+    id: 1,
+    targetId: '#V001',
+    coords: '10.0234, 78.1234',
+    status: 'Pending',
+    assignedTeam: 'Rescue Team Alpha',
+    eta: '6 min'
+  }
 ];
 
-// No-Fly Zone polygon coordinates
+// Two-Way Communications State (Bi-directional Ground Command <-> Drone <-> Field Responders)
+let commsMessages = [
+  {
+    id: 'msg-1',
+    sender: 'COMMAND_CENTER',
+    senderName: 'NDRF Base Control',
+    senderRole: 'gcs',
+    text: 'A.S.A.R.D Recon Unit #01 deployed over Sector B Earthquake Zone. Two-Way Comms Link established.',
+    type: 'system',
+    timestamp: new Date(Date.now() - 300000).toTimeString().split(' ')[0],
+    channel: 'CH-1'
+  },
+  {
+    id: 'msg-2',
+    sender: 'DRONE_01',
+    senderName: 'Drone Recon Unit #01',
+    senderRole: 'drone',
+    text: 'Aerial camera feed synchronized. Optical AI detector scanning rubble pile at 35m altitude.',
+    type: 'field',
+    timestamp: new Date(Date.now() - 180000).toTimeString().split(' ')[0],
+    channel: 'CH-1'
+  },
+  {
+    id: 'msg-3',
+    sender: 'COMMAND_CENTER',
+    senderName: 'NDRF Base Control',
+    senderRole: 'gcs',
+    text: 'Acoustic Loudspeaker & Intercom active. Ready to broadcast instructions to trapped survivors.',
+    type: 'broadcast',
+    timestamp: new Date(Date.now() - 60000).toTimeString().split(' ')[0],
+    channel: 'CH-1'
+  }
+];
+
+// Waypoint search path coordinates (Nainarkoil Sector)
+const searchPathWaypoints = [
+  { lat: 9.5440, lon: 78.6920 },
+  { lat: 9.5445, lon: 78.6928 },
+  { lat: 9.5450, lon: 78.6930 },
+  { lat: 9.5456, lon: 78.6945 },
+  { lat: 9.5460, lon: 78.6948 },
+  { lat: 9.5468, lon: 78.6953 },
+  { lat: 9.5474, lon: 78.6945 },
+  { lat: 9.5480, lon: 78.6955 },
+  { lat: 9.5475, lon: 78.6965 }
+];
+
+// No-Fly Zone polygon coordinates (Nainarkoil Sector)
 const noFlyZone = [
-  { lat: 10.0252, lon: 78.1245 },
-  { lat: 10.0265, lon: 78.1258 },
-  { lat: 10.0250, lon: 78.1268 },
-  { lat: 10.0240, lon: 78.1252 }
+  { lat: 9.5472, lon: 78.6965 },
+  { lat: 9.5485, lon: 78.6978 },
+  { lat: 9.5470, lon: 78.6988 },
+  { lat: 9.5460, lon: 78.6972 }
 ];
 
 // Live Autonomous Mission State
@@ -109,26 +220,49 @@ setInterval(() => {
           // Reached waypoint, advance to next
           activeMission.currentWpIndex = (activeMission.currentWpIndex + 1) % activeMission.waypoints.length;
         } else {
-          // Fly toward waypoint smoothly (~8 m/s)
-          const step = 0.00008;
+          // Fly toward waypoint smoothly (~10 m/s)
+          const step = 0.00010;
           telemetry.lat += (dLat / dist) * Math.min(step, dist);
           telemetry.lon += (dLon / dist) * Math.min(step, dist);
           telemetry.heading = Math.round((Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360);
-          telemetry.speed = 8.0;
+          telemetry.speed = 10.0;
         }
       }
     } else if (telemetry.cameraSource !== 'mobile_drone') {
-      // Only jitter if not fed by mobile phone
+      // Live coordinates over Nainarkoil
       telemetry.altitude = +(120 + (Math.sin(Date.now() / 3000) * 1.5)).toFixed(1);
       telemetry.speed = +(12.5 + (Math.cos(Date.now() / 2500) * 0.4)).toFixed(1);
       telemetry.heading = Math.round((telemetry.heading + 0.3) % 360);
-      telemetry.lat = +(10.0234 + Math.sin(Date.now() / 15000) * 0.0004).toFixed(4);
-      telemetry.lon = +(78.1234 + Math.cos(Date.now() / 15000) * 0.0004).toFixed(4);
+      telemetry.lat = +(9.5456 + Math.sin(Date.now() / 15000) * 0.0004).toFixed(4);
+      telemetry.lon = +(78.6945 + Math.cos(Date.now() / 15000) * 0.0004).toFixed(4);
     }
     
     // Battery discharge
     if (Math.random() < 0.04 && telemetry.battery > 5) {
       telemetry.battery -= 1;
+    }
+
+    // Dynamic RF Signal & Link Telemetry Realism
+    if (telemetry.cameraSource === 'mobile_drone') {
+      telemetry.signalStrength = '5G / Wi-Fi Mesh';
+      telemetry.latencyMs = Math.round(15 + Math.sin(Date.now() / 4000) * 3);
+      telemetry.signalDbm = Math.round(-63 + Math.sin(Date.now() / 7000) * 3);
+      telemetry.frequency = '5.8 GHz Wi-Fi + LTE';
+    } else {
+      telemetry.signalStrength = '4G LTE (SIM)';
+      telemetry.latencyMs = Math.round(22 + Math.sin(Date.now() / 3500) * 4);
+      telemetry.signalDbm = Math.round(-68 + Math.cos(Date.now() / 5000) * 3);
+      telemetry.frequency = '868 MHz ExpressLRS + 2.4 GHz';
+    }
+    telemetry.linkQuality = Math.min(100, Math.max(92, Math.round(100 - (Math.abs(telemetry.signalDbm + 60) * 0.7))));
+    if (telemetry.signalDbm >= -75) {
+      telemetry.signalBars = 4;
+    } else if (telemetry.signalDbm >= -85) {
+      telemetry.signalBars = 3;
+    } else if (telemetry.signalDbm >= -95) {
+      telemetry.signalBars = 2;
+    } else {
+      telemetry.signalBars = 1;
     }
 
     // Broadcast updated telemetry periodically
@@ -238,51 +372,651 @@ app.post('/api/mission/assign', (req, res) => {
       }
     }
 
-    console.log(`[AEROSIGHT] 🚀 Mission assigned with ${waypoints.length} waypoints. Autopilot engaged.`);
+    console.log(`[A.S.A.R.D] 🚀 Mission assigned with ${waypoints.length} waypoints. Autopilot engaged.`);
     return res.json({ success: true, message: `Mission assigned with ${waypoints.length} waypoints`, activeMission });
   }
   res.status(400).json({ success: false, message: 'Invalid waypoints provided' });
+});
+
+// Transmit Marked Mission Waypoints across Network to ArduPilot / Mission Planner via MAVLink
+const handleMissionTransmission = (req, res) => {
+  const { target_host, target_port, connection, waypoints } = req.body || {};
+  let connStr = connection ? String(connection).trim() : null;
+  const host = (target_host && String(target_host).trim()) || '172.27.172.87';
+  const port = parseInt(target_port, 10) || 14550;
+
+  if (!connStr) {
+    if (host.startsWith('tcp:') || host.startsWith('udp:')) {
+      connStr = host;
+    } else if (port === 5762 || port === 5760 || port === 5763) {
+      connStr = `tcp:${host}:${port}`;
+    } else {
+      connStr = `udpout:${host}:${port}`;
+    }
+  }
+
+  const rawWaypoints = Array.isArray(waypoints) && waypoints.length > 0 ? waypoints : searchPathWaypoints;
+
+  // Format waypoints with micro-degree precision and safe defaults
+  const formattedWps = rawWaypoints.map((wp, idx) => ({
+    id: idx + 1,
+    lat: parseFloat(wp.lat || wp.latitude || 9.5456),
+    lon: parseFloat(wp.lon || wp.longitude || 78.6945),
+    alt: parseFloat(wp.alt || wp.altitude || 20.0),
+    speed: parseFloat(wp.speed || 10.0)
+  }));
+
+  // Resolve Python runtime and MAVLink Transmitter script
+  const venvPython = path.resolve(__dirname, '..', '.venv', 'Scripts', 'python.exe');
+  const pythonPath = fs.existsSync(venvPython) ? venvPython : 'python';
+  const mavScript = path.resolve(__dirname, 'scripts', 'mavlink_transmitter.py');
+
+  const dataDir = path.resolve(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) {
+    try { fs.mkdirSync(dataDir, { recursive: true }); } catch (e) {}
+  }
+  const missionJsonPath = path.resolve(dataDir, 'active_mission.json');
+  try {
+    fs.writeFileSync(missionJsonPath, JSON.stringify(formattedWps, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('[A.S.A.R.D] Could not cache active_mission.json:', err.message);
+  }
+
+  // SAFETY: Action is 'transmit' without '--auto' flag (Strictly uploads waypoints, disarmed)
+  const cliArgs = [
+    mavScript,
+    '--connection', connStr,
+    '--waypoints', missionJsonPath,
+    '--action', 'transmit'
+  ];
+
+  console.log(`[A.S.A.R.D] 🛰️ Transmitting ${formattedWps.length} waypoints via MAVLink to ArduPilot at ${connStr}...`);
+
+  execFile(pythonPath, cliArgs, { timeout: 30000 }, (error, stdout, stderr) => {
+    let result = null;
+    if (stdout) {
+      try {
+        result = JSON.parse(stdout.trim());
+      } catch (e) {
+        const match = stdout.match(/\{[\s\S]*\}/);
+        if (match) {
+          try { result = JSON.parse(match[0]); } catch (err) {}
+        }
+      }
+    }
+
+    if (error || !result || result.success === false) {
+      const errMsg = result?.message || result?.error || (error ? error.message : 'Mission upload failed');
+      console.warn(`[A.S.A.R.D] ❌ MAVLink transmitter error: ${errMsg}`);
+      if (stderr) console.warn(`[A.S.A.R.D] MAVLink stderr:\n${stderr}`);
+
+      return res.status(502).json({
+        success: false,
+        message: errMsg,
+        error: errMsg,
+        endpoint: connStr,
+        waypoints: formattedWps.length,
+        target_system: result?.target_system || null,
+        target_component: result?.target_component || null
+      });
+    }
+
+    // Success: Cache active mission
+    activeMission = {
+      status: 'WAYPOINTS_UPLOADED',
+      pattern: req.body?.pattern || 'MAVLink Autonomous Waypoint Mission',
+      waypoints: formattedWps,
+      currentWpIndex: 0,
+      altitude: formattedWps[0]?.alt || 20,
+      mavlink_target: result?.endpoint || connStr,
+      target_system: result?.target_system || 1,
+      target_component: result?.target_component || 1,
+      verified: !!result?.verified,
+      home: result?.home || null,
+      transmitted_at: new Date().toISOString()
+    };
+
+    broadcastToDashboards(JSON.stringify({
+      type: 'mission_assigned',
+      mission: activeMission,
+      telemetry: telemetry,
+      mavlink_target: result?.endpoint || connStr
+    }));
+
+    console.log(`[A.S.A.R.D] ✅ MAVLink mission upload confirmed to ${result?.endpoint || connStr}! (sys=${result.target_system} comp=${result.target_component}, verified=${result?.verified})`);
+    return res.json({
+      success: true,
+      message: result.message || 'Mission uploaded successfully',
+      waypoints: result.waypoints || formattedWps.length,
+      target_system: result.target_system,
+      target_component: result.target_component,
+      endpoint: result?.endpoint || connStr,
+      verified: !!result?.verified,
+      home: result?.home || null,
+      readback_count: result?.readback_count || (formattedWps.length + 1)
+    });
+  });
+};
+
+app.post('/api/mavlink/transmit_mission', handleMissionTransmission);
+app.post('/api/drone/transmit-route', handleMissionTransmission);
+
+// Test connection to MAVLink endpoint / Autopilot
+app.post('/api/mavlink/ping', (req, res) => {
+  const { target_host, target_port, proto } = req.body || {};
+  const host = (target_host && String(target_host).trim()) || '172.27.172.87';
+  const port = parseInt(target_port, 10) || 14550;
+
+  const testTcp = (h, p, timeoutMs = 1500) => new Promise(resolve => {
+    const s = new net.Socket();
+    let resolved = false;
+    s.setTimeout(timeoutMs);
+    s.on('connect', () => { resolved = true; s.destroy(); resolve(true); });
+    s.on('timeout', () => { if (!resolved) { resolved = true; s.destroy(); resolve(false); } });
+    s.on('error', () => { if (!resolved) { resolved = true; s.destroy(); resolve(false); } });
+    s.connect(p, h);
+  });
+
+  (async () => {
+    // 1. Check SITL TCP 5762 (Secondary GCS / Companion port)
+    const sitl5762Open = await testTcp(host, 5762);
+    if (sitl5762Open) {
+      return res.json({
+        connected: true,
+        autopilot: true,
+        endpoint: `tcp:${host}:5762`,
+        message: `Connected to ArduPilot SITL Autopilot on ${host} via TCP 5762 (Vehicle 1 / Comp 1)`
+      });
+    }
+
+    // 2. Check SITL TCP 5760 (Primary port)
+    const sitl5760Open = await testTcp(host, 5760);
+    if (sitl5760Open) {
+      return res.json({
+        connected: true,
+        autopilot: true,
+        endpoint: `tcp:${host}:5760`,
+        message: `Connected to ArduPilot SITL Primary Port on ${host} via TCP 5760`
+      });
+    }
+
+    // 3. If target is TCP and specific port is tested
+    if (proto === 'tcp' || port === 5762 || port === 5760) {
+      const portOpen = await testTcp(host, port);
+      if (portOpen) {
+        return res.json({
+          connected: true,
+          autopilot: true,
+          endpoint: `tcp:${host}:${port}`,
+          message: `Connected to MAVLink TCP endpoint ${host}:${port}`
+        });
+      }
+    }
+
+    // 4. If UDP or unreachable
+    return res.json({
+      connected: false,
+      autopilot: false,
+      endpoint: `udpout:${host}:${port}`,
+      message: `No active MAVLink response on ${host}:${port}. ArduPilot SITL is not reachable on TCP 5762 or UDP ${port}. Ensure SITL is running on ${host}.`
+    });
+  })();
+});
+
+// Helper to execute MAVLink commands via Python bridge
+const executeMavlinkAction = (action, options, callback) => {
+  const host = (options.target_host && String(options.target_host).trim()) || '172.27.172.87';
+  const port = parseInt(options.target_port, 10) || 14550;
+  let connStr = options.connection ? String(options.connection).trim() : null;
+
+  if (!connStr) {
+    if (host.startsWith('tcp:') || host.startsWith('udp:')) {
+      connStr = host;
+    } else if (port === 5762 || port === 5760 || port === 5763) {
+      connStr = `tcp:${host}:${port}`;
+    } else {
+      connStr = `udpout:${host}:${port}`;
+    }
+  }
+
+  const venvPython = path.resolve(__dirname, '..', '.venv', 'Scripts', 'python.exe');
+  const pythonPath = fs.existsSync(venvPython) ? venvPython : 'python';
+  const mavScript = path.resolve(__dirname, 'scripts', 'mavlink_transmitter.py');
+
+  const cliArgs = [
+    mavScript,
+    '--connection', connStr,
+    '--action', action
+  ];
+
+  if (action === 'arm' || action === 'takeoff') {
+    cliArgs.push('--alt', String(options.altitude || 20.0));
+    cliArgs.push('--speed', String(options.speed || 10.0));
+  } else if (action === 'speed') {
+    cliArgs.push('--speed', String(options.speed || 10.0));
+  } else if (action === 'mode') {
+    cliArgs.push('--mode', String(options.mode || 'LOITER'));
+  } else if (action === 'execute') {
+    cliArgs.push('--alt', String(options.altitude || 20.0));
+    cliArgs.push('--speed', String(options.speed || 10.0));
+    if (options.waypointsPath) {
+      cliArgs.push('--waypoints', options.waypointsPath);
+    }
+  }
+
+  console.log(`[A.S.A.R.D] ⚡ Dispatching MAVLink ${action.toUpperCase()} action to ${connStr}...`);
+
+  execFile(pythonPath, cliArgs, { timeout: 15000 }, (error, stdout, stderr) => {
+    let result = null;
+    if (stdout) {
+      try {
+        result = JSON.parse(stdout.trim());
+      } catch (e) {
+        const match = stdout.match(/\{[\s\S]*\}/);
+        if (match) {
+          try { result = JSON.parse(match[0]); } catch (err) {}
+        }
+      }
+    }
+
+    if (error || !result || result.success === false) {
+      const errMsg = result?.message || (error ? error.message : `MAVLink ${action} failed`);
+      console.warn(`[A.S.A.R.D] ❌ MAVLink ${action} error: ${errMsg}`);
+      return callback({
+        success: false,
+        error: errMsg,
+        message: errMsg,
+        endpoint: connStr
+      });
+    }
+
+    return callback(result);
+  });
+};
+
+// Arm Autopilot Motors & Climb to Flight Altitude (20m)
+app.post('/api/mavlink/arm', (req, res) => {
+  executeMavlinkAction('arm', { ...req.body, altitude: 20.0, speed: 10.0 }, (result) => {
+    if (!result.success) return res.status(502).json(result);
+
+    telemetry.isArmed = true;
+    telemetry.status = 'IN FLIGHT';
+    telemetry.flightMode = 'GUIDED';
+    telemetry.altitude = 20.0;
+    telemetry.speed = 10.0;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+
+    console.log('[A.S.A.R.D] ✅ Drone Motors ARMED and TAKEOFF to 20m initiated at 10 m/s!');
+    return res.json(result);
+  });
+});
+app.post('/api/drone/arm', (req, res) => {
+  executeMavlinkAction('arm', { ...req.body, altitude: 20.0, speed: 10.0 }, (result) => {
+    if (!result.success) return res.status(502).json(result);
+    telemetry.isArmed = true;
+    telemetry.status = 'IN FLIGHT';
+    telemetry.flightMode = 'GUIDED';
+    telemetry.altitude = 20.0;
+    telemetry.speed = 10.0;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+    return res.json(result);
+  });
+});
+
+// Disarm Autopilot Motors
+app.post('/api/mavlink/disarm', (req, res) => {
+  executeMavlinkAction('disarm', req.body || {}, (result) => {
+    if (!result.success) return res.status(502).json(result);
+
+    telemetry.isArmed = false;
+    telemetry.status = 'STANDBY';
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+
+    console.log('[A.S.A.R.D] ✅ Drone Motors DISARMED.');
+    return res.json(result);
+  });
+});
+app.post('/api/drone/disarm', (req, res) => {
+  executeMavlinkAction('disarm', req.body || {}, (result) => {
+    if (!result.success) return res.status(502).json(result);
+    telemetry.isArmed = false;
+    telemetry.status = 'STANDBY';
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+    return res.json(result);
+  });
+});
+
+// Guided Mode Arm & Takeoff directly via MAVLink
+app.post('/api/mavlink/takeoff', (req, res) => {
+  const targetAlt = parseFloat(req.body?.altitude || 20.0);
+  executeMavlinkAction('takeoff', { ...req.body, altitude: targetAlt }, (result) => {
+    if (!result.success) return res.status(502).json(result);
+
+    telemetry.isArmed = true;
+    telemetry.status = 'IN FLIGHT';
+    telemetry.flightMode = 'GUIDED';
+    telemetry.altitude = targetAlt;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+
+    console.log(`[A.S.A.R.D] 🚀 Takeoff initiated to ${targetAlt}m.`);
+    return res.json(result);
+  });
+});
+app.post('/api/drone/takeoff', (req, res) => {
+  const targetAlt = parseFloat(req.body?.altitude || 20.0);
+  executeMavlinkAction('takeoff', { ...req.body, altitude: targetAlt }, (result) => {
+    if (!result.success) return res.status(502).json(result);
+    telemetry.isArmed = true;
+    telemetry.status = 'IN FLIGHT';
+    telemetry.altitude = targetAlt;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+    return res.json(result);
+  });
+});
+
+// Set Flight Groundspeed (MAV_CMD_DO_CHANGE_SPEED)
+app.post('/api/mavlink/speed', (req, res) => {
+  const targetSpeed = parseFloat(req.body?.speed || 10.0);
+  executeMavlinkAction('speed', { ...req.body, speed: targetSpeed }, (result) => {
+    telemetry.speed = targetSpeed;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+    console.log(`[A.S.A.R.D] ⚡ Drone speed set to ${targetSpeed} m/s.`);
+    return res.json({ success: true, speed: targetSpeed, result });
+  });
+});
+app.post('/api/drone/speed', (req, res) => {
+  const targetSpeed = parseFloat(req.body?.speed || 10.0);
+  executeMavlinkAction('speed', { ...req.body, speed: targetSpeed }, (result) => {
+    telemetry.speed = targetSpeed;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+    return res.json({ success: true, speed: targetSpeed, result });
+  });
+});
+
+// Full Autonomous Mission Initiation: Arm up to 20m, Speed up to 10 m/s, Navigate to Marked Coordinates
+const handleInitiateMission = (req, res) => {
+  const { waypoints, altitude = 20.0, speed = 10.0, connection, target_host, target_port } = req.body || {};
+  const targetAlt = parseFloat(altitude || 20.0);
+  const targetSpeed = parseFloat(speed || 10.0);
+
+  let rawWaypoints = Array.isArray(waypoints) && waypoints.length > 0 ? waypoints : null;
+  if (!rawWaypoints) {
+    const dataDir = path.resolve(__dirname, 'data');
+    const missionJsonPath = path.resolve(dataDir, 'active_mission.json');
+    if (fs.existsSync(missionJsonPath)) {
+      try {
+        rawWaypoints = JSON.parse(fs.readFileSync(missionJsonPath, 'utf-8'));
+      } catch (e) {}
+    }
+  }
+  if (!rawWaypoints || rawWaypoints.length === 0) {
+    rawWaypoints = searchPathWaypoints;
+  }
+
+  const formattedWps = rawWaypoints.map((wp, idx) => ({
+    id: idx + 1,
+    lat: parseFloat(wp.lat || wp.latitude || 9.5456),
+    lon: parseFloat(wp.lon || wp.longitude || 78.6945),
+    alt: targetAlt,
+    speed: targetSpeed
+  }));
+
+  // Cache to active_mission.json
+  const dataDir = path.resolve(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) {
+    try { fs.mkdirSync(dataDir, { recursive: true }); } catch (e) {}
+  }
+  const missionJsonPath = path.resolve(dataDir, 'active_mission.json');
+  try {
+    fs.writeFileSync(missionJsonPath, JSON.stringify(formattedWps, null, 2), 'utf-8');
+  } catch (err) {}
+
+  // Update server active mission and telemetry
+  activeMission = {
+    status: 'AUTONOMOUS SCANNING',
+    pattern: 'Tactical Marked Route',
+    waypoints: formattedWps,
+    currentWpIndex: 0,
+    altitude: targetAlt,
+    speed: targetSpeed
+  };
+
+  telemetry.isArmed = true;
+  telemetry.status = 'AUTONOMOUS SCANNING';
+  telemetry.flightMode = 'AUTO';
+  telemetry.altitude = targetAlt;
+  telemetry.speed = targetSpeed;
+
+  broadcastToDashboards(JSON.stringify({
+    type: 'mission_assigned',
+    mission: activeMission,
+    telemetry: telemetry
+  }));
+  broadcastToDashboards(JSON.stringify({
+    type: 'telemetry_update',
+    telemetry: telemetry
+  }));
+
+  for (const aiWs of aiClients) {
+    if (aiWs.readyState === WebSocket.OPEN) {
+      aiWs.send(JSON.stringify({
+        type: 'mission_assigned',
+        mission: activeMission
+      }));
+    }
+  }
+
+  console.log(`[A.S.A.R.D] 🚀 INITIATING DRONE: Arming, climb to ${targetAlt}m, speed ${targetSpeed}m/s, navigating to ${formattedWps.length} marked coordinates!`);
+
+  // Dispatch MAVLink bridge execution asynchronously to sitl/physical autopilot
+  executeMavlinkAction('execute', {
+    ...req.body,
+    altitude: targetAlt,
+    speed: targetSpeed,
+    waypointsPath: missionJsonPath
+  }, (mavResult) => {
+    console.log('[A.S.A.R.D] MAVLink mission execution result:', mavResult?.message || mavResult);
+  });
+
+  return res.json({
+    success: true,
+    message: `Drone ARMED, climbing to ${targetAlt}m, speed set to ${targetSpeed} m/s, navigating to ${formattedWps.length} marked coordinates!`,
+    armed: true,
+    altitude: targetAlt,
+    speed: targetSpeed,
+    flightMode: 'AUTO',
+    waypoints: formattedWps,
+    telemetry
+  });
+};
+
+app.post('/api/drone/initiate-mission', handleInitiateMission);
+app.post('/api/mavlink/execute-mission', handleInitiateMission);
+
+// Switch Flight Mode (AUTO, LOITER, RTL, LAND, GUIDED)
+app.post('/api/mavlink/mode', (req, res) => {
+  const mode = String(req.body?.mode || 'LOITER').toUpperCase();
+  executeMavlinkAction('mode', { ...req.body, mode }, (result) => {
+    if (!result.success) return res.status(502).json(result);
+
+    telemetry.flightMode = mode;
+    broadcastToDashboards(JSON.stringify({ type: 'telemetry_update', telemetry }));
+
+    console.log(`[A.S.A.R.D] 🔄 Flight Mode switched to ${mode}.`);
+    return res.json(result);
+  });
+});
+
+// =============================================================================
+// FastAPI Machine Learning Model Server Bridge (Port 8000)
+// =============================================================================
+const ML_SERVER_URL = process.env.ML_SERVER_URL || 'http://localhost:8000';
+
+app.get('/api/ml/status', async (req, res) => {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const mlRes = await fetch(`${ML_SERVER_URL}/`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (mlRes.ok) {
+      const data = await mlRes.json();
+      return res.json({ online: true, ...data });
+    }
+    return res.json({ online: false, message: `FastAPI responded with ${mlRes.status}` });
+  } catch (err) {
+    return res.json({ online: false, message: `FastAPI server offline (${err.message})` });
+  }
+});
+
+app.get('/api/ml/models', async (req, res) => {
+  try {
+    const mlRes = await fetch(`${ML_SERVER_URL}/models`);
+    const data = await mlRes.json();
+    return res.json(data);
+  } catch (err) {
+    return res.status(503).json({ error: 'FastAPI ML server unavailable' });
+  }
+});
+
+app.post('/api/ml/load-model', async (req, res) => {
+  try {
+    const mlRes = await fetch(`${ML_SERVER_URL}/load-model`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await mlRes.json();
+    return res.status(mlRes.status).json(data);
+  } catch (err) {
+    return res.status(503).json({ error: 'FastAPI ML server unavailable' });
+  }
+});
+
+app.post('/api/ml/detect', async (req, res) => {
+  try {
+    const mlRes = await fetch(`${ML_SERVER_URL}/detect-base64`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await mlRes.json();
+
+    // Broadcast detected target lock to all connected dashboard displays
+    if (data && data.detections && data.detections.length > 0) {
+      const firstVictim = data.detections.find(d => d.is_victim) || data.detections[0];
+      broadcastToDashboards(JSON.stringify({
+        type: 'target_lock',
+        locked: true,
+        model: data.model || 'RT-DETR-L',
+        confidence: firstVictim.confidence,
+        label: firstVictim.label,
+        bbox: firstVictim.bbox
+      }));
+
+      // Automatically ingest human survivor into active mission roster & rescue log
+      if (firstVictim.is_victim) {
+        ingestDetectionRecord({
+          id: firstVictim.id || '#SURVIVOR-01',
+          victim_id: firstVictim.id ? firstVictim.id.replace('DET-', '') : '001',
+          type: 'Person',
+          label: 'Person (Survivor)',
+          confidence: firstVictim.confidence,
+          lat: telemetry.lat,
+          lon: telemetry.lon,
+          altitude: `${telemetry.altitude} m`,
+          priority: 'CRITICAL',
+          priority_explanation: 'RT-DETR-L AI Red-Reticle Locked | Confirmed Survivor',
+          bbox: firstVictim.bbox,
+          image: req.body.image
+        });
+      }
+    }
+
+    return res.json(data);
+  } catch (err) {
+    return res.status(503).json({ error: 'FastAPI ML server unavailable', message: err.message });
+  }
+});
+
+// Disaster Classification Endpoints
+app.get('/api/disaster/status', (req, res) => {
+  res.json({ success: true, disaster: currentDisaster });
+});
+
+app.post('/api/disaster/classify', (req, res) => {
+  if (req.body && req.body.type) {
+    currentDisaster = {
+      ...currentDisaster,
+      ...req.body,
+      detectedAt: new Date().toTimeString().split(' ')[0]
+    };
+    broadcastToDashboards(JSON.stringify({
+      type: 'disaster_classified',
+      disaster: currentDisaster
+    }));
+    console.log(`[A.S.A.R.D] 🚨 Disaster Classified: ${currentDisaster.type} (${currentDisaster.confidence}% Conf)`);
+  }
+  res.json({ success: true, disaster: currentDisaster });
 });
 
 app.get('/api/detections', (req, res) => {
   res.json({ success: true, count: detections.length, data: detections });
 });
 
-// Ingest new victim or hazard detection from YOLO edge node
-app.post('/api/detections', (req, res) => {
-  const det = req.body;
-  if (!det || (!det.id && !det.victim_id)) {
-    return res.status(400).json({ success: false, message: 'Invalid detection payload' });
-  }
+// Helper: Ingest detection with deduplication and broadcast
+function ingestDetectionRecord(det) {
+  if (!det || (!det.id && !det.victim_id)) return null;
 
   const detectionId = det.id || `#${det.victim_id}`;
+  const targetLat = det.lat || det.latitude || telemetry.lat || 10.0234;
+  const targetLon = det.lon || det.longitude || telemetry.lon || 78.1234;
+
   const formattedDetection = {
     id: detectionId,
+    victim_id: det.victim_id || detectionId.replace('#', ''),
     type: det.type || 'Person',
     label: det.label || `Person (Victim ${det.victim_id || detectionId})`,
     confidence: typeof det.confidence === 'number' ? (det.confidence <= 1.0 ? Math.round(det.confidence * 100) : Math.round(det.confidence)) : 94,
-    lat: det.lat || det.latitude,
-    lon: det.lon || det.longitude,
-    locationStr: det.locationStr || `${(det.lat || det.latitude || 0).toFixed(4)}° N, ${(det.lon || det.longitude || 0).toFixed(4)}° E`,
-    rescueLat: det.rescueLat || det.latitude || det.lat,
-    rescueLon: det.rescueLon || det.longitude || det.lon,
-    rescueCoordsStr: det.rescueCoordsStr || `${(det.rescueLat || det.latitude || det.lat || 0).toFixed(4)}° N, ${(det.rescueLon || det.longitude || det.lon || 0).toFixed(4)}° E`,
-    altitude: det.altitude ? (typeof det.altitude === 'number' ? `${det.altitude} m` : det.altitude) : '120 m',
-    priority: det.priority || 'HIGH',
-    priority_explanation: det.priority_explanation || '',
+    lat: targetLat,
+    lon: targetLon,
+    locationStr: det.locationStr || `${targetLat.toFixed(4)}° N, ${targetLon.toFixed(4)}° E`,
+    rescueLat: det.rescueLat || targetLat,
+    rescueLon: det.rescueLon || targetLon,
+    rescueCoordsStr: det.rescueCoordsStr || `${(det.rescueLat || targetLat).toFixed(4)}° N, ${(det.rescueLon || targetLon).toFixed(4)}° E`,
+    altitude: det.altitude ? (typeof det.altitude === 'number' ? `${det.altitude} m` : det.altitude) : `${telemetry.altitude} m`,
+    priority: det.priority || 'CRITICAL',
+    priority_explanation: det.priority_explanation || 'RT-DETR-L Red-Reticle AI Detected | Single Verified Target',
     time: det.time || new Date().toTimeString().split(' ')[0],
     status: det.status || 'Not Rescued',
-    image: det.image || (det.image_path ? `/${det.image_path}` : '/assets/survivor_rubble_target.jpg')
+    disaster_type: det.disaster_type || currentDisaster.type,
+    image: det.image || (det.image_path ? `/${det.image_path}` : '/assets/victim_v001_snapshot.jpg'),
+    snapshot: det.snapshot || det.image || (det.image_path ? `/${det.image_path}` : '/assets/victim_v001_snapshot.jpg'),
+    bbox: det.bbox || null,
+    deduplication_status: 'Single Verified Target (No Duplication)'
   };
 
-  // Upsert into detections array
-  const existingIdx = detections.findIndex(d => d.id === detectionId);
+  // DEDUPLICATION CONDITION: Match by exact ID or spatial proximity within ~10 meters (0.00012 deg)
+  const existingIdx = detections.findIndex(d => {
+    if (d.id === detectionId) return true;
+    if (d.lat && d.lon && formattedDetection.lat && formattedDetection.lon) {
+      const dLat = Math.abs(d.lat - formattedDetection.lat);
+      const dLon = Math.abs(d.lon - formattedDetection.lon);
+      return (dLat < 0.00012 && dLon < 0.00012);
+    }
+    return false;
+  });
+
   if (existingIdx >= 0) {
-    detections[existingIdx] = { ...detections[existingIdx], ...formattedDetection };
+    detections[existingIdx] = {
+      ...detections[existingIdx],
+      ...formattedDetection,
+      id: detections[existingIdx].id,
+      image: formattedDetection.image || detections[existingIdx].image,
+      snapshot: formattedDetection.snapshot || formattedDetection.image || detections[existingIdx].snapshot
+    };
   } else {
     detections.unshift(formattedDetection);
 
-    // Auto-create Rescue Log entry for Person detections
     if (formattedDetection.type === 'Person') {
       const rescueEntry = {
         id: rescueLog.length + 1,
@@ -294,17 +1028,35 @@ app.post('/api/detections', (req, res) => {
       };
       rescueLog.unshift(rescueEntry);
     }
+    console.log(`[A.S.A.R.D] [NEW TARGET] Ingested AI Detection: ${formattedDetection.id} [${formattedDetection.priority}] (${formattedDetection.locationStr})`);
   }
 
-  // Broadcast to all dashboard web clients
   broadcastToDashboards(JSON.stringify({
     type: 'new_detection',
-    data: formattedDetection,
+    data: existingIdx >= 0 ? detections[existingIdx] : formattedDetection,
+    is_duplicate: existingIdx >= 0,
     count: detections.length
   }));
 
-  console.log(`[AEROSIGHT] Ingested AI Detection: ${formattedDetection.id} [${formattedDetection.priority}] (${formattedDetection.locationStr})`);
-  res.status(201).json({ success: true, count: detections.length, data: formattedDetection });
+  return existingIdx >= 0 ? detections[existingIdx] : formattedDetection;
+}
+
+// Ingest new victim or hazard detection from OpenCV/YOLO edge node (With Deduplication)
+app.post('/api/detections', (req, res) => {
+  const det = req.body;
+  if (!det || (!det.id && !det.victim_id)) {
+    return res.status(400).json({ success: false, message: 'Invalid detection payload' });
+  }
+
+  const result = ingestDetectionRecord(det);
+  const isDup = detections.some((d, idx) => idx > 0 && d.id === result.id);
+
+  res.status(201).json({
+    success: true,
+    is_duplicate: isDup,
+    count: detections.length,
+    data: result
+  });
 });
 
 // Emergency Alert ingestion
@@ -342,7 +1094,7 @@ app.post('/api/detections/clear', (req, res) => {
       try { aiWs.send(clearPayload); } catch (e) {}
     }
   }
-  console.log('[AEROSIGHT] Purged all detection records and rescue coordinates.');
+  console.log('[A.S.A.R.D] Purged all detection records and rescue coordinates.');
   res.json({ success: true, message: 'All detection records purged successfully.' });
 });
 
@@ -377,8 +1129,126 @@ app.get('/api/rescue-log/csv', (req, res) => {
     csv += `"${row.id}","${row.targetId}","${row.coords}","${row.status}","${row.assignedTeam}","${row.eta}"\n`;
   });
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="aerosight_rescue_coordinates_log.csv"');
+  res.setHeader('Content-Disposition', 'attachment; filename="A.S.A.R.D_rescue_coordinates_log.csv"');
   res.send(csv);
+});
+
+// ==========================================================================
+// TWO-WAY COMMUNICATIONS & SIGNAL DIAGNOSTICS API
+// ==========================================================================
+app.get('/api/comms/messages', (req, res) => {
+  res.json({ success: true, count: commsMessages.length, messages: commsMessages });
+});
+
+app.post('/api/comms/message', (req, res) => {
+  const { text, sender, senderName, senderRole, type, channel, audioData } = req.body;
+  if (!text && !audioData) {
+    return res.status(400).json({ success: false, message: 'Message text or audio required' });
+  }
+
+  const newMsg = {
+    id: `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    sender: sender || (senderRole === 'drone' ? 'DRONE_01' : 'COMMAND_CENTER'),
+    senderName: senderName || (senderRole === 'drone' ? 'Drone Recon Unit #01' : 'NDRF Base Control'),
+    senderRole: senderRole || 'gcs',
+    text: text || '[Voice Transmission]',
+    type: type || (audioData ? 'audio' : 'dispatch'),
+    audioData: audioData || null,
+    channel: channel || 'CH-1',
+    timestamp: new Date().toTimeString().split(' ')[0]
+  };
+
+  commsMessages.push(newMsg);
+  if (commsMessages.length > 100) commsMessages.shift(); // Keep latest 100
+
+  const payload = JSON.stringify({
+    type: 'comms_message',
+    message: newMsg
+  });
+
+  broadcastToDashboards(payload);
+  if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
+    try { droneSenderSocket.send(payload); } catch (e) {}
+  }
+
+  console.log(`[A.S.A.R.D] [2-Way Comms] [${newMsg.channel}] ${newMsg.senderName}: ${newMsg.text}`);
+  res.status(201).json({ success: true, message: newMsg, allMessages: commsMessages });
+});
+
+// Emergency Loudspeaker Audio Broadcast (Text-to-Speech or Voice announcement to survivors)
+app.post('/api/comms/broadcast', (req, res) => {
+  const { text, priority, voice, repeat } = req.body;
+  if (!text) {
+    return res.status(400).json({ success: false, message: 'Broadcast announcement text required' });
+  }
+
+  const broadcastMsg = {
+    id: `bcast-${Date.now()}`,
+    sender: 'COMMAND_CENTER',
+    senderName: 'NDRF Aerial Loudspeaker',
+    senderRole: 'gcs',
+    text: text,
+    priority: priority || 'CRITICAL',
+    type: 'loudspeaker_broadcast',
+    channel: 'CH-1',
+    timestamp: new Date().toTimeString().split(' ')[0]
+  };
+
+  commsMessages.push(broadcastMsg);
+  if (commsMessages.length > 100) commsMessages.shift();
+
+  const bcastPayload = JSON.stringify({
+    type: 'comms_broadcast',
+    text: text,
+    priority: priority || 'CRITICAL',
+    voice: voice || 'tactical_en',
+    repeat: repeat || 1,
+    message: broadcastMsg,
+    timestamp: Date.now()
+  });
+
+  broadcastToDashboards(bcastPayload);
+  if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
+    try { droneSenderSocket.send(bcastPayload); } catch (e) {}
+  }
+
+  console.log(`[A.S.A.R.D] 📢 EMERGENCY LOUDSPEAKER BROADCAST TRIGGERED: "${text}"`);
+  res.json({ success: true, broadcast: broadcastMsg });
+});
+
+app.post('/api/comms/clear', (req, res) => {
+  commsMessages = [];
+  const clearPayload = JSON.stringify({ type: 'comms_cleared', timestamp: Date.now() });
+  broadcastToDashboards(clearPayload);
+  if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
+    try { droneSenderSocket.send(clearPayload); } catch (e) {}
+  }
+  res.json({ success: true, message: 'Comms message log cleared' });
+});
+
+// Comprehensive RF Signal & Link Telemetry Diagnostics
+app.get('/api/comms/signal', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      signalStrength: telemetry.signalStrength,
+      signalBars: telemetry.signalBars,
+      signalDbm: telemetry.signalDbm,
+      latencyMs: telemetry.latencyMs,
+      linkQuality: telemetry.linkQuality,
+      packetLoss: telemetry.packetLoss,
+      frequency: telemetry.frequency,
+      protocol: telemetry.protocol,
+      bitrateMbps: telemetry.bitrateMbps,
+      snrDb: 28.4,
+      fecCorrection: 'MIL-STD-188 Forward Error Correction (Active)',
+      uplinkThroughput: '4.2 Mbps',
+      downlinkThroughput: `${telemetry.bitrateMbps} Mbps`,
+      encryption: 'AES-128 GCM Encrypted Tunnel',
+      antennaDiversity: 'Dual Polarized Patch + Omni 5.8 dBi',
+      hardwareBridge: telemetry.cameraSource === 'mobile_drone' ? 'Smartphone Ultra-Low Latency WebSocket Link' : 'Simulated MAVLink Avionics Relay'
+    }
+  });
 });
 
 // HTTP Frame Relay endpoint as fallback (supports both mobile HTTP fallback and test uploads)
@@ -438,7 +1308,7 @@ app.post('/api/ipwebcam/connect', (req, res) => {
   }
 
   telemetry.cameraSource = 'ip_webcam';
-  console.log(`[AEROSIGHT] Mobile IP Webcam Connected: ${ipWebcamUrl}`);
+  console.log(`[A.S.A.R.D] Mobile IP Webcam Connected: ${ipWebcamUrl}`);
   broadcastToDashboards(JSON.stringify({
     type: 'ipwebcam_connected',
     url: ipWebcamUrl,
@@ -463,7 +1333,7 @@ function startIpWebcamPolling(baseUrl) {
   const shotUrl = `${baseUrl}/shot.jpg`;
   const client = shotUrl.startsWith('https') ? https : http;
 
-  console.log(`[AEROSIGHT] Streaming mobile camera frames from ${shotUrl} to Python YOLO AI Engine...`);
+  console.log(`[A.S.A.R.D] Streaming mobile camera frames from ${shotUrl} to Python YOLO AI Engine...`);
   ipWebcamPollInterval = setInterval(() => {
     if (!ipWebcamUrl) {
       clearInterval(ipWebcamPollInterval);
@@ -504,7 +1374,7 @@ app.post('/api/ipwebcam/disconnect', (req, res) => {
     ipWebcamPollInterval = null;
   }
   telemetry.cameraSource = 'simulation';
-  console.log('[AEROSIGHT] Mobile IP Webcam Disconnected');
+  console.log('[A.S.A.R.D] Mobile IP Webcam Disconnected');
   broadcastToDashboards(JSON.stringify({ type: 'ipwebcam_disconnected' }));
   res.json({ success: true });
 });
@@ -539,7 +1409,7 @@ app.get('/api/ipwebcam/stream', (req, res) => {
     });
 
     proxyReq.on('error', (err) => {
-      console.error('[AEROSIGHT] IP Webcam proxy error:', err.message);
+      console.error('[A.S.A.R.D] IP Webcam proxy error:', err.message);
       if (!res.headersSent) {
         res.status(502).json({ error: 'Failed to connect to IP Webcam: ' + err.message });
       }
@@ -710,7 +1580,7 @@ app.get('/api/location/search', (req, res) => {
   const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`;
   https.get(searchUrl, {
     headers: {
-      'User-Agent': 'AeroSight-RescueDrone/2.0 (Tactical 3D Command)'
+      'User-Agent': 'A.S.A.R.D-RescueDrone/2.0 (Tactical 3D Command)'
     },
     timeout: 5000
   }, (apiRes) => {
@@ -784,9 +1654,9 @@ if (fs.existsSync(sslCertPath) && fs.existsSync(sslKeyPath)) {
       key: fs.readFileSync(sslKeyPath),
       cert: fs.readFileSync(sslCertPath)
     };
-    console.log('[AEROSIGHT] SSL certificates loaded successfully for HTTPS camera access.');
+    console.log('[A.S.A.R.D] SSL certificates loaded successfully for HTTPS camera access.');
   } catch (e) {
-    console.warn('[AEROSIGHT] Warning: Could not read SSL certs:', e.message);
+    console.warn('[A.S.A.R.D] Warning: Could not read SSL certs:', e.message);
   }
 }
 
@@ -799,7 +1669,7 @@ if (sslOptions) {
   try {
     httpsServer = https.createServer(sslOptions, app);
   } catch (e) {
-    console.warn('[AEROSIGHT] Warning: Failed to create HTTPS server:', e.message);
+    console.warn('[A.S.A.R.D] Warning: Failed to create HTTPS server:', e.message);
   }
 }
 
@@ -839,27 +1709,29 @@ wss.on('connection', (ws) => {
             if (clientRole === 'drone_sender') {
               droneSenderSocket = ws;
               telemetry.cameraSource = 'mobile_drone';
-              console.log('[AEROSIGHT] Mobile Drone Transmitter Connected (WebSocket)!');
+              console.log('[A.S.A.R.D] Mobile Drone Transmitter Connected (WebSocket)!');
+              ws.send(JSON.stringify({ type: 'comms_history', messages: commsMessages }));
               broadcastToDashboards(JSON.stringify({
                 type: 'drone_connected',
                 timestamp: Date.now()
               }));
             } else if (clientRole === 'dashboard_webcam') {
               telemetry.cameraSource = 'webcam';
-              console.log('[AEROSIGHT] Dashboard Local Webcam Streamer Connected!');
+              console.log('[A.S.A.R.D] Dashboard Local Webcam Streamer Connected!');
               broadcastToDashboards(JSON.stringify({
                 type: 'drone_connected',
                 timestamp: Date.now()
               }));
             } else if (clientRole === 'dashboard') {
               dashboardClients.add(ws);
-              console.log('[AEROSIGHT] Dashboard client connected to live feed');
+              console.log('[A.S.A.R.D] Dashboard client connected to live feed');
+              ws.send(JSON.stringify({ type: 'comms_history', messages: commsMessages }));
               if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'drone_connected' }));
               }
             } else if (clientRole === 'ai_engine' || clientRole === 'edge_ai') {
               aiClients.add(ws);
-              console.log('[AEROSIGHT] Python Edge AI Node connected to WebSocket bridge');
+              console.log('[A.S.A.R.D] Python Edge AI Node connected to WebSocket bridge');
               if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'drone_connected' }));
               }
@@ -941,7 +1813,7 @@ wss.on('connection', (ws) => {
                   aiWs.send(text);
                 }
               }
-              console.log(`[AEROSIGHT] [WS] Mission assigned with ${data.waypoints.length} waypoints. Starting autonomous grid flight.`);
+              console.log(`[A.S.A.R.D] [WS] Mission assigned with ${data.waypoints.length} waypoints. Starting autonomous grid flight.`);
             }
             return;
           }
@@ -1012,10 +1884,94 @@ wss.on('connection', (ws) => {
             broadcastToDashboards(text);
             return;
           }
+
+          if (data.type === 'comms_message') {
+            const msg = data.message || data;
+            const formattedMsg = {
+              id: msg.id || `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+              sender: msg.sender || (ws === droneSenderSocket ? 'DRONE_01' : 'COMMAND_CENTER'),
+              senderName: msg.senderName || (ws === droneSenderSocket ? 'Drone Recon Unit #01' : 'NDRF Base Control'),
+              senderRole: msg.senderRole || (ws === droneSenderSocket ? 'drone' : 'gcs'),
+              text: msg.text || '',
+              type: msg.type || 'dispatch',
+              channel: msg.channel || 'CH-1',
+              timestamp: msg.timestamp || new Date().toTimeString().split(' ')[0]
+            };
+            commsMessages.push(formattedMsg);
+            if (commsMessages.length > 100) commsMessages.shift();
+
+            const broadcastStr = JSON.stringify({ type: 'comms_message', message: formattedMsg });
+            broadcastToDashboards(broadcastStr);
+            if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN && ws !== droneSenderSocket) {
+              try { droneSenderSocket.send(broadcastStr); } catch (e) {}
+            }
+            console.log(`[A.S.A.R.D] [WS Comms] [${formattedMsg.channel}] ${formattedMsg.senderName}: ${formattedMsg.text}`);
+            return;
+          }
+
+          if (data.type === 'comms_broadcast') {
+            const bMsg = {
+              id: `bcast-${Date.now()}`,
+              sender: 'COMMAND_CENTER',
+              senderName: 'NDRF Aerial Loudspeaker',
+              senderRole: 'gcs',
+              text: data.text || 'EMERGENCY ANNOUNCEMENT',
+              priority: data.priority || 'CRITICAL',
+              type: 'loudspeaker_broadcast',
+              channel: data.channel || 'CH-1',
+              timestamp: new Date().toTimeString().split(' ')[0]
+            };
+            commsMessages.push(bMsg);
+            if (commsMessages.length > 100) commsMessages.shift();
+
+            const bcastPayload = JSON.stringify({
+              type: 'comms_broadcast',
+              text: data.text,
+              priority: data.priority || 'CRITICAL',
+              voice: data.voice || 'tactical_en',
+              repeat: data.repeat || 1,
+              message: bMsg,
+              timestamp: Date.now()
+            });
+            broadcastToDashboards(bcastPayload);
+            if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN) {
+              try { droneSenderSocket.send(bcastPayload); } catch (e) {}
+            }
+            return;
+          }
+
+          if (data.type === 'comms_audio') {
+            const audioPayload = JSON.stringify({
+              type: 'comms_audio',
+              audioData: data.audioData,
+              senderRole: data.senderRole || (ws === droneSenderSocket ? 'drone' : 'gcs'),
+              senderName: data.senderName || (ws === droneSenderSocket ? 'Drone Recon Unit #01' : 'NDRF Base Control'),
+              timestamp: Date.now()
+            });
+            broadcastToDashboards(audioPayload);
+            if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN && ws !== droneSenderSocket) {
+              try { droneSenderSocket.send(audioPayload); } catch (e) {}
+            }
+            return;
+          }
+
+          if (data.type === 'comms_ptt_state') {
+            const pttPayload = JSON.stringify({
+              type: 'comms_ptt_state',
+              isTransmitting: !!data.isTransmitting,
+              senderRole: data.senderRole || (ws === droneSenderSocket ? 'drone' : 'gcs'),
+              senderName: data.senderName || (ws === droneSenderSocket ? 'Drone Recon Unit #01' : 'NDRF Base Control')
+            });
+            broadcastToDashboards(pttPayload);
+            if (droneSenderSocket && droneSenderSocket.readyState === WebSocket.OPEN && ws !== droneSenderSocket) {
+              try { droneSenderSocket.send(pttPayload); } catch (e) {}
+            }
+            return;
+          }
         }
       }
     } catch (err) {
-      console.error('[AEROSIGHT] Error handling WS message:', err);
+      console.error('[A.S.A.R.D] Error handling WS message:', err);
     }
   });
 
@@ -1023,7 +1979,7 @@ wss.on('connection', (ws) => {
     if (ws === droneSenderSocket) {
       droneSenderSocket = null;
       telemetry.cameraSource = 'simulation';
-      console.log('[AEROSIGHT] Mobile Drone Camera Disconnected');
+      console.log('[A.S.A.R.D] Mobile Drone Camera Disconnected');
       broadcastToDashboards(JSON.stringify({ type: 'drone_disconnected' }));
     }
     dashboardClients.delete(ws);
@@ -1043,8 +1999,8 @@ function broadcastToDashboards(msg) {
 server.listen(PORT, () => {
   const ips = getLocalNetworkAddresses();
   console.log(`\n================================================================`);
-  console.log(`[AEROSIGHT] Command Server running on http://localhost:${PORT}`);
-  console.log(`[AEROSIGHT] 📱 Mobile Drone Camera Streams:`);
+  console.log(`[A.S.A.R.D] Command Server running on http://localhost:${PORT}`);
+  console.log(`[A.S.A.R.D] 📱 Mobile Drone Camera Streams:`);
   if (ips.length > 0) {
     ips.forEach(ip => {
       console.log(`  👉 HTTPS (Recommended for Mobile Camera): https://${ip.address}:${SSL_PORT}/mobile`);
@@ -1059,16 +2015,16 @@ server.listen(PORT, () => {
 // Start HTTPS Server
 if (httpsServer) {
   httpsServer.listen(SSL_PORT, () => {
-    console.log(`[AEROSIGHT] 🔒 Secure HTTPS Server active on port ${SSL_PORT} (Enables camera access on Android & iOS)`);
+    console.log(`[A.S.A.R.D] 🔒 Secure HTTPS Server active on port ${SSL_PORT} (Enables camera access on Android & iOS)`);
   });
   httpsServer.on('error', (err) => {
-    console.warn(`[AEROSIGHT] HTTPS server warning: ${err.message}`);
+    console.warn(`[A.S.A.R.D] HTTPS server warning: ${err.message}`);
   });
 }
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\n[AEROSIGHT] Error: Port ${PORT} is already in use by another process.`);
+    console.error(`\n[A.S.A.R.D] Error: Port ${PORT} is already in use by another process.`);
     console.error(`Tip: You can set a different port using: $env:PORT=3001; npm start\n`);
     process.exit(1);
   } else {

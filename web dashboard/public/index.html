@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AEROSIGHT | AI-Powered Autonomous Disaster Response Platform</title>
+  <title>A.S.A.R.D | Autonomous Search And Rescue Drone Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   
+
+  <!-- Leaflet Tactical Map Engine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
   <!-- Core Dashboard Styles -->
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/views.css">
 </head>
-<body class="tactical-dark">
+<body class="asard-light">
 
   <!-- TOP HEADER -->
   <header class="header-bar">
@@ -27,109 +30,17 @@
         </svg>
       </button>
 
+      <!-- A.S.A.R.D Logo and Brand Name -->
       <div class="logo-cluster">
-        <!-- Stylized AEROSIGHT Stealth Drone Logo -->
-        <div class="logo-icon">
-          <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
-            <path d="M20 4L34 32L24 28L20 20L16 28L6 32L20 4Z" fill="url(#logo-grad)" stroke="#00d2ff" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M20 20L20 36" stroke="#00d2ff" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="20" cy="20" r="2.5" fill="#ffffff" />
-            <defs>
-              <linearGradient id="logo-grad" x1="20" y1="4" x2="20" y2="36" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#00e5ff" stop-opacity="0.9"/>
-                <stop offset="1" stop-color="#0066cc" stop-opacity="0.5"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
         <div class="brand-text">
-          <div class="brand-name">AEROSIGHT</div>
-          <div class="brand-sub">AI-Powered Autonomous Disaster Response Platform</div>
+          <div class="brand-name">A.S.A.R.D</div>
+          <div class="brand-sub">Autonomous Search And Rescue Drone</div>
         </div>
       </div>
     </div>
 
-    <!-- Center Mission Motto -->
-    <div class="header-center">
-      <span class="motto-tag">FASTER DETECTION</span>
-      <span class="motto-sep">|</span>
-      <span class="motto-tag">SAFER RESCUE</span>
-      <span class="motto-sep">|</span>
-      <span class="motto-tag">STRONGER TOMORROW</span>
-    </div>
 
-    <!-- Header Right Tactical Status Badges -->
-    <div class="header-right">
-      <!-- Disaster Zone Active Alert Pill -->
-      <div class="disaster-alert-pill" id="disasterAlertPill">
-        <div class="alert-icon-wrap">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </div>
-        <div class="alert-info">
-          <div class="alert-title">Disaster Zone Active</div>
-          <div class="alert-sub">Earthquake – Sector B</div>
-        </div>
-      </div>
-
-      <!-- Notification Bell with Count -->
-      <div class="notification-wrapper" id="notifWrapper">
-        <button class="icon-btn notif-btn" id="notifBtn" title="3 New Disaster Alerts">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span class="notif-badge">3</span>
-        </button>
-        <!-- Dropdown Notifications Menu -->
-        <div class="notif-dropdown" id="notifDropdown">
-          <div class="notif-header">
-            <span>PRIORITY ALERTS</span>
-            <span class="notif-count-tag">3 UNRESOLVED</span>
-          </div>
-          <div class="notif-list">
-            <div class="notif-item critical">
-              <span class="notif-dot"></span>
-              <div class="notif-text">
-                <div class="notif-msg">Victim #001 detected in collapsed Sector B-2 rubble.</div>
-                <div class="notif-time">2 mins ago • AI Confidence 96%</div>
-              </div>
-            </div>
-            <div class="notif-item warning">
-              <span class="notif-dot"></span>
-              <div class="notif-text">
-                <div class="notif-msg">Gas leak danger identified near Sector B-4 intersection.</div>
-                <div class="notif-time">5 mins ago • Hazard Alert #005</div>
-              </div>
-            </div>
-            <div class="notif-item info">
-              <span class="notif-dot"></span>
-              <div class="notif-text">
-                <div class="notif-msg">Rescue Team Bravo is En Route to Coordinate 10.0242, 78.1240.</div>
-                <div class="notif-time">8 mins ago • ETA 5 min</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Officer Profile -->
-      <div class="officer-profile">
-        <div class="officer-avatar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-        <div class="officer-meta">
-          <div class="officer-name">Rescue Officer</div>
-          <div class="officer-dept">NDRF</div>
-        </div>
-      </div>
-    </div>
+    <div class="header-right"></div>
   </header>
 
   <!-- MAIN WRAPPER -->
@@ -138,7 +49,7 @@
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar-nav" id="sidebarNav">
       <nav class="nav-menu">
-        <a href="#dashboard" class="nav-item active" data-nav="dashboard">
+        <a href="/#dashboard" target="_blank" class="nav-item active" data-nav="dashboard" title="Primary Tactical Mission Command Hub">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="9"></rect>
@@ -150,30 +61,18 @@
           <span class="nav-label">Dashboard</span>
         </a>
 
-        <a href="#map-3d" class="nav-item" data-nav="map-3d" id="navItemMap3D">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-              <polyline points="2 17 12 22 22 17"></polyline>
-              <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-          </span>
-          <span class="nav-label">3D Tactical Map</span>
-          <span class="nav-badge" id="sidebar3dLiveBadge" style="background: rgba(0, 229, 255, 0.15); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); font-size: 9.5px; padding: 1px 6px; border-radius: 4px;">LIVE</span>
-        </a>
-
-        <a href="#mission-plan" class="nav-item" data-nav="mission-plan">
+        <a href="/#mission-plan" target="_blank" class="nav-item" data-nav="mission-plan" title="Autonomous Waypoint Grid & MAVLink Uplink">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
-              <circle cx="12" cy="12" r="6"></circle>
+              <circle cx="12" cy="6" r="2"></circle>
               <circle cx="12" cy="12" r="2"></circle>
             </svg>
           </span>
           <span class="nav-label">Mission Plan</span>
         </a>
 
-        <a href="#live-feed" class="nav-item" data-nav="live-feed">
+        <a href="/#live-feed" target="_blank" class="nav-item" data-nav="live-feed" title="Reconnaissance Video Wall & Thermal FLIR">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M23 7l-7 5 7 5V7z"></path>
@@ -183,29 +82,7 @@
           <span class="nav-label">Live Feed</span>
         </a>
 
-        <a href="#ai-detections" class="nav-item" data-nav="ai-detections">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-            </svg>
-          </span>
-          <span class="nav-label">AI Detections</span>
-          <span class="nav-badge" id="sidebarDetectionCount">5</span>
-        </a>
-
-        <a href="#rescue-coord" class="nav-item" data-nav="rescue-coord">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </span>
-          <span class="nav-label">Rescue Coordination</span>
-        </a>
-
-        <a href="#drone-control" class="nav-item" data-nav="drone-control">
+        <a href="/#drone-control" target="_blank" class="nav-item" data-nav="drone-control" title="Fly-By-Wire Manual Joysticks & Gimbal Override">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -214,53 +91,24 @@
           <span class="nav-label">Drone Control</span>
         </a>
 
-        <a href="#reports" class="nav-item" data-nav="reports">
+        <a href="/#two-way-comms" target="_blank" class="nav-item" data-nav="two-way-comms" id="navItemComms" title="Loudspeaker Intercom & Tactical Audio Comms">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
             </svg>
           </span>
-          <span class="nav-label">Reports</span>
-        </a>
-
-        <a href="#settings" class="nav-item" data-nav="settings">
-          <span class="nav-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </span>
-          <span class="nav-label">Settings</span>
+          <span class="nav-label">Two-Way Comms</span>
+          <span class="nav-badge" id="sidebarCommsBadge" style="background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.4); font-size: 9.5px; padding: 1px 6px; border-radius: 4px;">LIVE</span>
         </a>
       </nav>
 
-      <!-- Sidebar Bottom Drone Wireframe & Motto matching Figma -->
+      <!-- Sidebar Footer: Brand motto and project name -->
       <div class="sidebar-footer">
-        <div class="drone-wireframe-art">
-          <svg width="84" height="54" viewBox="0 0 120 70" fill="none">
-            <!-- Drone body -->
-            <ellipse cx="60" cy="35" rx="14" ry="7" stroke="#00d2ff" stroke-width="1.8" fill="rgba(0, 210, 255, 0.1)"/>
-            <circle cx="60" cy="35" r="3" fill="#00e5ff"/>
-            <!-- Arms -->
-            <line x1="48" y1="31" x2="22" y2="18" stroke="#00d2ff" stroke-width="2"/>
-            <line x1="72" y1="31" x2="98" y2="18" stroke="#00d2ff" stroke-width="2"/>
-            <line x1="50" y1="39" x2="24" y2="52" stroke="#00d2ff" stroke-width="2"/>
-            <line x1="70" y1="39" x2="96" y2="52" stroke="#00d2ff" stroke-width="2"/>
-            <!-- Rotors -->
-            <ellipse cx="22" cy="18" rx="15" ry="4" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="3 2"/>
-            <ellipse cx="98" cy="18" rx="15" ry="4" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="3 2"/>
-            <ellipse cx="24" cy="52" rx="15" ry="4" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="3 2"/>
-            <ellipse cx="96" cy="52" rx="15" ry="4" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="3 2"/>
-            <!-- Sensor Gimbal -->
-            <circle cx="60" cy="42" r="3" stroke="#ff3b56" stroke-width="1.5" fill="#ff3b56"/>
-          </svg>
-        </div>
-        <div class="footer-brand-title">AEROSIGHT</div>
-        <div class="footer-brand-motto">HUMANITY<br>FROM ABOVE</div>
+        <div class="footer-brand-title">A.S.A.R.D</div>
+        <div class="footer-brand-motto">SAVING LIVES<br>FROM ABOVE</div>
       </div>
     </aside>
 
@@ -270,7 +118,7 @@
       <!-- DASHBOARD VIEW PANEL -->
       <div class="view-panel active" id="viewDashboard">
 
-        <!-- TOP ROW: LIVE MAP (38%), CAMERA FEED (42%), TELEMETRY (20%) -->
+        <!-- TOP ROW: LIVE MAP (50%), CAMERA FEED (50%) -->
         <section class="grid-row row-top">
 
         <!-- 1. LIVE GOOGLE 3D SATELLITE MAP PANEL -->
@@ -278,33 +126,20 @@
           <div class="card-header">
             <div class="card-title-wrap">
               <span class="card-header-bar"></span>
-              <h2 class="card-title">GOOGLE 3D SATELLITE MAP</h2>
-              <span class="sat-live-badge">
-                <span class="pulse-dot-green"></span>
-                <span>EARTH 3D</span>
-              </span>
+              <h2 class="card-title">3D SATELLITE</h2>
             </div>
             <div class="card-actions">
               <!-- Search Location Input -->
               <div class="map-search-wrap">
-                <input type="text" id="inpMapSearchLocation" placeholder="🔍 Search place, city, coords..." class="tactical-search-input">
+                <input type="text" id="inpMapSearchLocation" placeholder="Search place..." class="tactical-search-input">
                 <button class="tactical-btn mini" id="btnMapSearchGo">GO</button>
               </div>
-              <!-- Quick Action Toolbar -->
+              <!-- Quick Action Toolbar - Only Necessary Tabs -->
               <button class="tactical-btn map-action-btn" id="btnMapMyLocation" title="Center 3D Satellite on Device GPS">
-                <span>🎯 My Location</span>
+                <span>My Location</span>
               </button>
               <button class="tactical-btn map-action-btn highlight-btn" id="btnMarkPlaceMode" title="Click anywhere on satellite map to mark a place">
-                <span>📍 Mark Place</span>
-              </button>
-              <button class="tactical-btn map-action-btn" id="btnMarkAreaMode" title="Click 3+ points to outline search boundary">
-                <span>📐 Mark Area</span>
-              </button>
-              <button class="tactical-btn map-action-btn" id="btnTogglePlacesDrawer" title="View all marked places">
-                <span>📋 Places (<strong id="markedPlacesCount">0</strong>)</span>
-              </button>
-              <button class="toggle-pill active" id="btnToggle3DTilt" title="Toggle 3D Oblique Tilt (45°) / 2D Nadir (0°)">
-                <span>3D (45°)</span>
+                <span>Mark Place</span>
               </button>
               <button class="icon-action-btn" id="btnMapFullscreen" title="Expand Fullscreen">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -320,7 +155,7 @@
 
             <!-- Floating Marking Instruction Hint -->
             <div class="map-marking-banner" id="markingModeBanner" style="display: none;">
-              <span class="pulse-dot-cyan"></span>
+              <span class="pulse-dot-orange"></span>
               <span id="markingBannerText">MARKING MODE ACTIVE: Click anywhere on Google Satellite to place a marker.</span>
               <button class="mini-btn-cancel" onclick="MapGoogle3DManager.setMarkingMode(false); MapGoogle3DManager.setAreaMarkingMode(false);">Cancel</button>
             </div>
@@ -395,6 +230,11 @@
                 </div>
                 <button class="drawer-close-btn" id="btnClosePlacesDrawer">&times;</button>
               </div>
+              <div class="drawer-transmit-bar" style="padding: 6px 12px; background: rgba(255,102,0, 0.08); border-bottom: 1px solid var(--border-subtle);">
+                <button class="tactical-btn mini" id="btnTransmitMarkedPlacesMavlink" style="width: 100%; border-color: var(--orange-primary); color: #ffffff; background: var(--orange-primary); display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800;" title="Initiate drone: Arm motors, climb to 20m, set speed to 10 m/s, and fly to marked tactical points">
+                  <span>🚀 INITIATE: ARM (20M), SPEED (10 M/S) & FLY TO MARKS</span>
+                </button>
+              </div>
               <div class="places-list" id="markedPlacesList">
                 <!-- Populated by map-google3d.js -->
               </div>
@@ -402,67 +242,49 @@
           </div>
         </div>
 
-        <!-- 2. DRONE CAMERA FEED (RGB & THERMAL IR DUAL FEED) -->
+        <!-- 2. CAMERA FEED -->
         <div class="panel-card drone-camera-card">
           <div class="card-header">
             <div class="card-title-wrap">
               <span class="card-header-bar"></span>
-              <h2 class="card-title">DRONE CAMERA FEED</h2>
-              <div class="ml-model-pill" id="activeMlModelBadge" title="Active Trained Model: RT-DETR-L">
-                <span class="ml-status-dot"></span>
-                <span id="activeMlModelText">ML: RT-DETR-L</span>
-              </div>
+              <h2 class="card-title">CAMERA FEED</h2>
               <div class="live-drone-cam-indicator" id="liveDroneCamBadge" style="display: none;">
                 <span class="pulse-dot-green"></span>
-                <span>MOBILE FEED ACTIVE</span>
+                <span>LIVE</span>
+              </div>
+              <div class="ml-model-badge-wrap" id="mlModelBadgeWrap" title="FastAPI ML Inference Engine (Port 8000)">
+                <span class="ml-status-dot" id="mlStatusDot"></span>
+                <span id="activeMlModelText">ML:</span>
+                <select id="mlModelSelector" class="ml-model-select" title="Select / Switch ML Model via FastAPI">
+                  <option value="rtdetr-l.pt" selected>RT-DETR-L</option>
+                </select>
+                <button id="btnReloadMlModel" class="ml-reload-btn" title="Reload Model from FastAPI">↻</button>
               </div>
             </div>
             <div class="card-actions">
-              <!-- Big Screen Theater Toggle Button -->
-              <button class="header-action-btn big-screen-btn" id="btnBigScreenToggle" title="Toggle Big Screen Theater View">
+              <!-- Detect Photo Test Upload Button -->
+              <button class="header-action-btn" id="btnTestUploadImage" title="Run RT-DETR Model Detection on Test Image" style="background: #111111; border: 1px solid var(--orange-border); color: #fff;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <span id="bigScreenBtnText">Big Screen</span>
+                <span>Detect Photo</span>
               </button>
               <!-- IP Webcam Connection Button -->
-              <button class="header-action-btn ip-webcam-btn" id="btnConnectIpWebcam" title="Connect IP Webcam App Stream">
+              <button class="header-action-btn ip-webcam-btn" id="btnConnectIpWebcam" title="Connect IP Webcam Phone Stream">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="2"></circle>
                   <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
                 </svg>
                 <span>IP Webcam</span>
               </button>
-              <!-- Mobile Drone Connection Button -->
-              <button class="header-action-btn mobile-drone-btn" id="btnConnectMobileDrone" title="Connect Smartphone Camera as Drone">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="5" y="2" width="14" height="20" rx="2"></rect>
-                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                </svg>
-                <span>Mobile Cam</span>
-              </button>
-              <!-- Test Photo Upload for Trained RT-DETR AI -->
-              <button class="header-action-btn" id="btnTestUploadImage" title="Upload Photo for RT-DETR-L AI Human Detection">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <span>Test Photo</span>
-              </button>
-              <input type="file" id="testPhotoFileInput" accept="image/*" style="display: none;">
-              <button class="header-action-btn active" id="splitViewBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                  <line x1="12" y1="3" x2="12" y2="21"></line>
-                </svg>
-                <span>Split View</span>
-              </button>
               <button class="icon-action-btn" id="cameraFullscreenBtn" title="Fullscreen Feed">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                 </svg>
               </button>
+              <input type="file" id="testPhotoFileInput" accept="image/*" style="display: none;">
             </div>
           </div>
 
@@ -485,8 +307,8 @@
                 <img src="/assets/aerial_rubble_rgb.jpg" alt="RGB Drone Surveillance Camera View" id="rgbFeedImage">
                 <canvas id="rgbLiveCanvas" style="display: none; width: 100%; height: 100%; object-fit: cover;"></canvas>
                 <!-- AI Detection Bounding Box on RGB -->
-                <div class="detection-box bbox-rgb" id="bboxRgb">
-                  <div class="bbox-tag" id="bboxTagRgb">Person 96%</div>
+                <div class="detection-box bbox-rgb" id="bboxRgb" style="display: none;">
+                  <div class="bbox-tag" id="bboxTagRgb">Person</div>
                   <div class="bbox-corner tl"></div>
                   <div class="bbox-corner tr"></div>
                   <div class="bbox-corner bl"></div>
@@ -505,8 +327,8 @@
                 <img src="/assets/aerial_rubble_thermal.jpg" alt="Thermal FLIR Infrared Drone Surveillance Camera View" id="thermalFeedImage">
                 <canvas id="thermalLiveCanvas" style="display: none; width: 100%; height: 100%; object-fit: cover;"></canvas>
                 <!-- AI Detection Bounding Box on Thermal -->
-                <div class="detection-box bbox-thermal" id="bboxThermal">
-                  <div class="bbox-tag thermal-tag" id="bboxTagThermal">Person 96%</div>
+                <div class="detection-box bbox-thermal" id="bboxThermal" style="display: none;">
+                  <div class="bbox-tag thermal-tag" id="bboxTagThermal">Person</div>
                   <div class="bbox-corner tl"></div>
                   <div class="bbox-corner tr"></div>
                   <div class="bbox-corner bl"></div>
@@ -567,122 +389,6 @@
           </div>
         </div>
 
-        <!-- 3. DRONE TELEMETRY CARD -->
-        <div class="panel-card telemetry-card">
-          <div class="card-header">
-            <div class="card-title-wrap">
-              <span class="card-header-bar"></span>
-              <h2 class="card-title">DRONE TELEMETRY</h2>
-            </div>
-            <div class="status-pill-green" id="droneFlightStatusBadge">
-              <span class="pulse-dot-green"></span>
-              <span id="flightStatusText">IN FLIGHT</span>
-            </div>
-          </div>
-
-          <div class="telemetry-content">
-            <!-- Battery Gauge -->
-            <div class="telem-row telem-battery">
-              <div class="telem-icon battery-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2">
-                  <rect x="1" y="6" width="18" height="12" rx="2"></rect>
-                  <line x1="23" y1="10" x2="23" y2="14"></line>
-                </svg>
-              </div>
-              <div class="telem-details">
-                <div class="telem-label-row">
-                  <span class="telem-label">Battery</span>
-                  <span class="telem-val-highlight" id="telemBatteryVal">78%</span>
-                </div>
-                <div class="battery-bar-track">
-                  <div class="battery-bar-fill" id="telemBatteryFill" style="width: 78%;"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Altitude -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <path d="M8 3l4 8 5-5 5 15H2L8 3z"></path>
-                </svg>
-              </div>
-              <div class="telem-label">Altitude</div>
-              <div class="telem-val" id="telemAltitudeVal">120 m</div>
-            </div>
-
-            <!-- Speed -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-              </div>
-              <div class="telem-label">Speed</div>
-              <div class="telem-val" id="telemSpeedVal">12.5 m/s</div>
-            </div>
-
-            <!-- GPS -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </div>
-              <div class="telem-label">GPS</div>
-              <div class="telem-val gps-val" id="telemGpsVal">10.0234° N, 78.1234° E</div>
-            </div>
-
-            <!-- Signal Strength -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <path d="M2 20h.01"></path>
-                  <path d="M7 20v-4"></path>
-                  <path d="M12 20v-8"></path>
-                  <path d="M17 20V8"></path>
-                  <path d="M22 4v16"></path>
-                </svg>
-              </div>
-              <div class="telem-label">Signal Strength</div>
-              <div class="telem-val signal-val">
-                <span>4G (SIM)</span>
-                <div class="signal-bars">
-                  <span class="bar active"></span>
-                  <span class="bar active"></span>
-                  <span class="bar active"></span>
-                  <span class="bar active"></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Flight Time -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 10"></polyline>
-                </svg>
-              </div>
-              <div class="telem-label">Flight Time</div>
-              <div class="telem-val" id="telemFlightTimeVal">12:34 min</div>
-            </div>
-
-            <!-- Distance from Home -->
-            <div class="telem-row">
-              <div class="telem-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-              </div>
-              <div class="telem-label">Distance from Home</div>
-              <div class="telem-val" id="telemDistVal">1.2 km</div>
-            </div>
-          </div>
-        </div>
       </section>
 
       <!-- MIDDLE ROW: AI DETECTION RESULTS (58%) & SELECTED TARGET DETAILS (42%) -->
@@ -767,7 +473,7 @@
               <img src="/assets/survivor_rubble_target.jpg" alt="Selected Target Reconnaissance" id="selectedTargetImg">
               <div class="target-hud-frame">
                 <div class="crosshair-reticle"></div>
-                <div class="target-lock-label">LOCKED [96%]</div>
+                <div class="target-lock-label not-connected" id="targetLockLabel">NOT CONNECTED</div>
               </div>
             </div>
 
@@ -786,7 +492,7 @@
               <div class="info-item">
                 <span class="info-label">Confidence</span>
                 <span class="info-sep">:</span>
-                <span class="info-val text-green font-bold" id="dtConfidence">96%</span>
+                <span class="info-val font-bold" id="dtConfidence">--</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Location</span>
@@ -796,7 +502,7 @@
               <div class="info-item">
                 <span class="info-label">Rescue Coordinates</span>
                 <span class="info-sep">:</span>
-                <span class="info-val text-cyan rescue-coords-val">
+                <span class="info-val text-orange rescue-coords-val">
                   <span id="dtRescueCoords">10.0235° N, 78.1236° E</span>
                   <button class="copy-coords-btn" id="copyCoordsBtn" title="Copy Coordinates">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -821,150 +527,32 @@
                 <span class="info-sep">:</span>
                 <span class="info-val text-red font-bold" id="dtStatus">Not Rescued</span>
               </div>
+              <div class="info-item">
+                <span class="info-label">Disaster Type</span>
+                <span class="info-sep">:</span>
+                <span class="info-val text-amber font-bold" id="dtDisaster">Earthquake (Structural Collapse)</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Deduplication</span>
+                <span class="info-sep">:</span>
+                <span class="info-val text-green font-bold" id="dtDedupStatus">Single Verified Target (No Duplication)</span>
+              </div>
             </div>
           </div>
 
-          <!-- Selected Target Action Buttons matching Figma -->
+          <!-- Target Action: Forensic Snapshot Inspection -->
           <div class="target-action-row">
-            <button class="btn-action btn-view-map" id="btnViewOnMap">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
+            <button class="btn-action btn-view-snapshot" id="btnViewSnapshot" title="Inspect full-resolution optical snapshot with red bounding box and telemetry">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
               </svg>
-              <span>View on Map</span>
-            </button>
-
-            <button class="btn-action btn-notify-rescue" id="btnNotifyRescue">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-              <span>Notify Rescue Team</span>
-            </button>
-
-            <button class="btn-action btn-mark-rescued" id="btnMarkRescued">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              <span>Mark as Rescued</span>
+              <span>VIEW SNAPSHOT (FORENSIC INTEL)</span>
             </button>
           </div>
         </div>
       </section>
 
-      <!-- BOTTOM ROW: MISSION CONTROLS (50%) & RESCUE COORDINATES LOG (50%) -->
-      <section class="grid-row row-bottom">
-
-        <!-- 6. MISSION CONTROLS -->
-        <div class="panel-card mission-controls-card">
-          <div class="card-header">
-            <div class="card-title-wrap">
-              <span class="card-header-bar"></span>
-              <h2 class="card-title">MISSION CONTROLS</h2>
-            </div>
-          </div>
-
-          <div class="mission-controls-layout">
-            <!-- Tactical Action Buttons -->
-            <div class="mission-action-buttons">
-              <button class="tactical-mission-btn btn-start-mission" id="btnStartMission">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                <span>START MISSION</span>
-              </button>
-
-              <button class="tactical-mission-btn btn-pause-mission" id="btnPauseMission">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16"></rect>
-                  <rect x="14" y="4" width="4" height="16"></rect>
-                </svg>
-                <span>PAUSE</span>
-              </button>
-
-              <button class="tactical-mission-btn btn-return-home" id="btnReturnHome">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                  <path d="M3 3v5h5"></path>
-                </svg>
-                <span>RETURN HOME</span>
-              </button>
-
-              <button class="tactical-mission-btn btn-emergency-land" id="btnEmergencyLand">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span>EMERGENCY LAND</span>
-              </button>
-            </div>
-
-            <!-- Settings Selectors -->
-            <div class="mission-selectors">
-              <div class="selector-group">
-                <label for="flightModeSelect" class="selector-label">Flight Mode</label>
-                <div class="custom-select-wrap">
-                  <select id="flightModeSelect" class="tactical-select">
-                    <option value="AUTO" selected>AUTO</option>
-                    <option value="MANUAL">MANUAL</option>
-                    <option value="WAYPOINT">WAYPOINT</option>
-                    <option value="RTL">RTL (Return to Launch)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="selector-group">
-                <label for="searchPatternSelect" class="selector-label">Search Pattern</label>
-                <div class="custom-select-wrap">
-                  <select id="searchPatternSelect" class="tactical-select">
-                    <option value="Grid Search" selected>Grid Search</option>
-                    <option value="Expanding Square">Expanding Square</option>
-                    <option value="Sector Search">Sector Search</option>
-                    <option value="Perimeter Recon">Perimeter Recon</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. RESCUE COORDINATES LOG -->
-        <div class="panel-card rescue-log-card">
-          <div class="card-header">
-            <div class="card-title-wrap">
-              <span class="card-header-bar"></span>
-              <h2 class="card-title">RESCUE COORDINATES LOG</h2>
-            </div>
-            <a href="/api/rescue-log/csv" class="header-action-btn download-btn" id="downloadCsvBtn" download>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <span>Download CSV</span>
-            </a>
-          </div>
-
-          <div class="table-responsive">
-            <table class="tactical-table rescue-table" id="rescueLogTable">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Rescue Coordinates (Lat, Lon)</th>
-                  <th>Status</th>
-                  <th>Assigned Team</th>
-                  <th>ETA</th>
-                </tr>
-              </thead>
-              <tbody id="rescueLogTableBody">
-                <!-- Dynamically populated by rescue-log.js -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
       </div> <!-- End #viewDashboard -->
 
 
@@ -977,7 +565,7 @@
         <div class="view-header-banner">
           <div class="view-banner-title">
             <div class="view-title-main">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <circle cx="12" cy="12" r="6"></circle>
                 <circle cx="12" cy="12" r="2"></circle>
@@ -1106,8 +694,8 @@
             </div>
 
             <!-- Failsafe Rules -->
-            <div style="background: rgba(0,210,255,0.04); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 8px 10px; font-size: 11px;">
-              <div style="color: var(--cyan-primary); font-weight: 600; margin-bottom: 3px;">AUTONOMOUS FAILSAFE PROTOCOLS</div>
+            <div style="background: rgba(255,102,0,0.04); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 8px 10px; font-size: 11px;">
+              <div style="color: var(--orange-primary); font-weight: 600; margin-bottom: 3px;">AUTONOMOUS FAILSAFE PROTOCOLS</div>
               <div style="color: var(--text-secondary); line-height: 1.4;">
                 • Auto-RTL triggered if battery reaches ≤ 20%<br>
                 • Geo-fence strictly enforced (No-Fly Zone Sector B-3 excluded)<br>
@@ -1115,10 +703,33 @@
               </div>
             </div>
 
+            <!-- Remote Mission Planner & ArduPilot Uplink Config -->
+            <div class="mav-remote-config-card" style="background: rgba(255,102,0, 0.05); border: 1px solid rgba(255,102,0, 0.3); border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-family: var(--font-tactical); font-size: 11px; font-weight: 700; color: var(--orange-primary); letter-spacing: 0.8px;">
+                  📡 ARDUPILOT / MISSION PLANNER UPLINK
+                </span>
+                <span class="status-pill-green" style="font-size: 9px; padding: 1px 6px;">ONLINE</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+                <div class="config-field-group" style="margin: 0;">
+                  <label class="config-field-label" style="font-size: 10px;">Target IP / Endpoint</label>
+                  <input type="text" id="mavTargetIp" class="tactical-input" value="tcp:10.10.95.188:5762" placeholder="e.g. tcp:10.10.95.188:5762 or 10.10.95.188" style="height: 28px; font-size: 11.5px;">
+                </div>
+                <div class="config-field-group" style="margin: 0;">
+                  <label class="config-field-label" style="font-size: 10px;">Port</label>
+                  <input type="number" id="mavTargetPort" class="tactical-input" value="5762" placeholder="5762" style="height: 28px; font-size: 11.5px;">
+                </div>
+              </div>
+              <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 5px;">
+                Connects directly to <strong>tcp:10.10.95.188:5762</strong> (or remote UDP/TCP). Transmits marked waypoints, commands <strong>AUTO</strong> mode, and commences autonomous navigation.
+              </div>
+            </div>
+
             <!-- Big Transmit Mission Button -->
-            <button class="btn-transmit-mission" id="btnTransmitMission">
+            <button class="btn-transmit-mission" id="btnTransmitMission" style="margin-top: 12px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>TRANSMIT MISSION TO DRONE (UPLOAD WP)</span>
+              <span>TRANSMIT TO MISSION PLANNER (START AUTONOMOUS FLIGHT)</span>
             </button>
           </div>
         </div>
@@ -1132,7 +743,7 @@
         <div class="view-header-banner">
           <div class="view-banner-title">
             <div class="view-title-main">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
                 <path d="M23 7l-7 5 7 5V7z"></path>
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
               </svg>
@@ -1161,7 +772,7 @@
               <div class="wall-hud-tag">CAM 01: SONY 4K OPTICAL RGB [PRIMARY SENSOR]</div>
               <div class="wall-telemetry-osd">
                 <span class="hud-pill" style="font-size: 10px; background: rgba(0,230,118,0.2); color: #00e676; border: 1px solid #00e676;">60.0 FPS</span>
-                <span class="hud-pill" style="font-size: 10px; background: rgba(0,210,255,0.2); color: #00d2ff; border: 1px solid #00d2ff;">1080P PROXY</span>
+                <span class="hud-pill" style="font-size: 10px; background: rgba(255,102,0,0.2); color: #FF6600; border: 1px solid #FF6600;">1080P PROXY</span>
               </div>
               <img id="wallRgbImage" class="wall-video-media" src="/images/aerial_rubble_rgb.jpg" alt="RGB Recon Feed">
               <div class="camera-reticle" style="pointer-events: none;"></div>
@@ -1215,7 +826,7 @@
 
             <div class="cinema-ctrl-group">
               <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="checkbox" id="chkWallAiOverlay" checked style="accent-color: var(--cyan-primary);">
+                <input type="checkbox" id="chkWallAiOverlay" checked style="accent-color: var(--orange-primary);">
                 <span>AI Target Bounding Boxes</span>
               </label>
             </div>
@@ -1245,7 +856,7 @@
         <div class="view-header-banner">
           <div class="view-banner-title">
             <div class="view-title-main">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
               <span>MANUAL FLIGHT OVERRIDE, GIMBAL AIM & PAYLOAD RELEASE</span>
@@ -1264,6 +875,59 @@
           </div>
         </div>
 
+        <!-- Mission Planner Route Uplink & Telemetry Bridge Bar -->
+        <div class="tactical-card mission-planner-uplink-card" style="margin-bottom: 14px; padding: 14px 18px; border-left: 4px solid var(--orange-primary); background: #ffffff;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <!-- Left Info -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(255,102,0,0.1); display: flex; align-items: center; justify-content: center; color: var(--orange-primary);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13"></path>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 800; color: #111111; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                  <span>MISSION PLANNER / ARDUPILOT UPLINK</span>
+                  <span class="status-pill-amber" id="droneCtrlMavStatusBadge" style="font-size: 9px; padding: 2px 7px;">STANDBY</span>
+                </div>
+                <div style="font-size: 11px; color: #555555; margin-top: 2px;" id="droneCtrlRouteSummary">
+                  Transmit route across Wi-Fi to Mission Planner on another laptop • <span style="color: var(--orange-primary); font-weight: 700;">This PC IP: <span id="thisDashboardIpLabel">172.27.172.218</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connection Endpoint Inputs & Action Buttons -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 4px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px;" title="IP address of the other laptop running Mission Planner">
+                <span style="font-size: 10px; font-weight: 700; color: #666666;">MISSION PLANNER IP:</span>
+                <input type="text" id="droneCtrlMavIp" value="172.27.172.87" placeholder="172.27.172.87" style="width: 130px; border: none; background: transparent; font-size: 11px; font-weight: 600; color: #111111; outline: none; font-family: monospace;">
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px;">
+                <span style="font-size: 10px; font-weight: 700; color: #666666;">PORT:</span>
+                <input type="text" id="droneCtrlMavPort" value="14550" placeholder="14550" style="width: 55px; border: none; background: transparent; font-size: 11px; font-weight: 600; color: #111111; outline: none; font-family: monospace;">
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px;">
+                <span style="font-size: 10px; font-weight: 700; color: #666666;">PROTO:</span>
+                <select id="droneCtrlMavProto" style="border: none; background: transparent; font-size: 11px; font-weight: 600; color: #111111; outline: none; cursor: pointer;">
+                  <option value="udp" selected>UDP</option>
+                  <option value="tcp">TCP</option>
+                </select>
+              </div>
+              <button class="tactical-btn" id="btnDroneCtrlConnectMav" style="border-color: #d1d5db; color: #111111; padding: 6px 12px; font-size: 11px; font-weight: 700;" title="Test connection to Mission Planner on the other device">
+                <span>CONNECT / PING</span>
+              </button>
+              <button class="tactical-btn highlight-btn" id="btnDroneCtrlTransmitRoute" style="background: var(--orange-primary); color: #ffffff; border: none; padding: 6px 16px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(255,102,0,0.3); cursor: pointer;" title="Send route data to Mission Planner drone on other device">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 2L11 13"></path>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>TRANSMIT ROUTE TO DRONE</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- 3-Column Drone Control Grid -->
         <div class="drone-control-grid">
           <!-- Col 1: Virtual Dual Joysticks & Flight Actions -->
@@ -1273,7 +937,7 @@
               <span>FLY-BY-WIRE DUAL JOYSTICKS (MODE 2)</span>
             </div>
             <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 10px;">
-              Drag sticks or use keyboard: <strong style="color: var(--cyan-primary);">W/A/S/D</strong> (Throttle & Yaw), <strong style="color: var(--cyan-primary);">Arrow Keys</strong> (Pitch & Roll)
+              Drag sticks or use keyboard: <strong style="color: var(--orange-primary);">W/A/S/D</strong> (Throttle & Yaw), <strong style="color: var(--orange-primary);">Arrow Keys</strong> (Pitch & Roll)
             </div>
 
             <!-- Virtual Joysticks Box -->
@@ -1297,148 +961,244 @@
               </div>
             </div>
 
-            <!-- Flight Mode Buttons -->
+            <!-- Flight Mode & Arming Buttons -->
             <div class="tactical-btn-stack" style="margin-top: 12px;">
-              <button class="ctrl-action-btn" id="btnCtrlTakeoff">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                <span>Autonomous Takeoff (Hover 2.5m)</span>
-              </button>
-              <button class="ctrl-action-btn" id="btnCtrlHold">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
-                <span>Position Hold & Hover</span>
-              </button>
-              <button class="ctrl-action-btn" id="btnCtrlOrbit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                <span>Circle Orbit Around Victim #001</span>
-              </button>
+              <div style="display: flex; gap: 6px; width: 100%;">
+                <button class="ctrl-action-btn" id="btnCtrlArm" style="flex: 1; background: rgba(34, 197, 94, 0.12); border: 1px solid #22c55e; color: #15803d; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span>ARM MOTORS</span>
+                </button>
+                <button class="ctrl-action-btn" id="btnCtrlDisarm" style="flex: 1; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #b91c1c; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                  <span>DISARM</span>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Col 2: Gimbal FPV Sight & Emergency Payload Release -->
-          <div class="tactical-card" style="padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <div class="card-title-tactical">
-                <span class="card-title-icon">🎯</span>
-                <span>GIMBAL CROSSHAIR & OPTICAL TRACKING</span>
-              </div>
-
-              <!-- FPV Gimbal Sight -->
-              <div class="fpv-gimbal-screen" style="margin-top: 8px;">
-                <img id="gimbalFpvImg" src="/images/aerial_rubble_rgb.jpg" alt="FPV Gimbal Camera">
-                <div class="gimbal-hud-center"></div>
-                <div style="position: absolute; bottom: 6px; left: 8px; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 3px; font-family: var(--font-tactical); color: #00d2ff;">
-                  TILT: <span id="lblGimbalPitch">-45°</span> | PAN: <span id="lblGimbalYaw">0°</span>
-                </div>
-              </div>
-
-              <!-- Gimbal Tilt & Pan Controls -->
-              <div class="config-field-group" style="margin-top: 10px;">
-                <div class="config-field-label">
-                  <span>Gimbal Pitch (Tilt)</span>
-                  <strong id="valGimbalPitch">-45° (Nadir)</strong>
-                </div>
-                <input type="range" id="rngGimbalPitch" class="tactical-range" min="-90" max="15" value="-45">
-              </div>
-
-              <div class="config-field-group" style="margin-top: 6px;">
-                <div class="config-field-label">
-                  <span>Camera Optical Zoom</span>
-                  <strong id="valOpticalZoom">2.4x</strong>
-                </div>
-                <input type="range" id="rngOpticalZoom" class="tactical-range" min="10" max="80" value="24">
-              </div>
+      <!-- =====================================================================
+           4. TWO-WAY COMMUNICATIONS & DRONE LOUDSPEAKER INTERCOM PANEL
+           ===================================================================== -->
+      <div class="view-panel" id="viewTwoWayComms" style="display: none;">
+        <!-- Header Banner -->
+        <div class="view-header-banner">
+          <div class="view-banner-title">
+            <div class="view-title-main">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2.2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <span>TWO-WAY TACTICAL COMMS & DRONE LOUDSPEAKER INTERCOM</span>
+              <span class="comms-header-pill" id="commsRemoteTxIndicator" style="display: none;">
+                <span class="pulse-dot-green"></span>
+                <span id="commsRemoteTxLabel">REMOTE TRANSMITTING</span>
+              </span>
             </div>
-
-            <!-- EMERGENCY PAYLOAD DROP MECHANISM -->
-            <div class="payload-drop-box">
-              <div class="payload-drop-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                <span>EMERGENCY PAYLOAD DROP BAY</span>
-              </div>
-              <div style="font-size: 10px; color: var(--text-secondary);">
-                Bay 1: First Aid Kit + Water Ration (850g)<br>
-                Bay 2: Satellite Emergency SOS Locator Beacon (400g)
-              </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; color: #ffaa00;">
-                  <input type="checkbox" id="chkArmPayload" style="accent-color: #ff3b56;">
-                  <span>ARM DROP INTERLOCK</span>
-                </label>
-                <span id="lblPayloadStatus" style="font-size: 10px; font-family: var(--font-tactical); color: var(--text-muted);">DISARMED</span>
-              </div>
-              <button class="btn-drop-payload" id="btnReleasePayload" disabled style="opacity: 0.5; cursor: not-allowed;">
-                DEPLOY PAYLOAD TO VICTIM (DROP)
-              </button>
+            <div class="view-title-sub">
+              Encrypted Military Radio Mesh • Direct Loudspeaker Survivor Hail • Bi-Directional Voice & Dispatch Relay
             </div>
           </div>
+          <div class="view-banner-actions">
+            <div class="comms-rf-chip">
+              <span class="chip-dot"></span>
+              <span>CARRIER: 462.5625 MHz (AES-128 GCM)</span>
+            </div>
+            <label class="comms-mute-label">
+              <input type="checkbox" id="chkMuteSpeaker">
+              <span>Mute Speaker</span>
+            </label>
+          </div>
+        </div>
 
-          <!-- Col 3: Subsystem Diagnostics & 4-Motor RPM Health -->
-          <div class="tactical-card" style="padding: 14px;">
+        <!-- 3-Column Communications Grid -->
+        <div class="two-way-comms-grid">
+          <!-- Col 1: PTT Voice Broadcaster & Live Audio Intercom -->
+          <div class="tactical-card comms-intercom-card">
             <div class="card-title-tactical">
-              <span class="card-title-icon">⚡</span>
-              <span>AVIONICS & MOTOR HARDWARE DIAGNOSTICS</span>
+              <span class="card-title-icon">🎙️</span>
+              <span>DRONE LOUDSPEAKER PTT BROADCASTER</span>
+              <span class="comms-badge-standby" id="commsPttStatusBadge">STANDBY</span>
             </div>
 
-            <!-- Motor RPM Bars -->
-            <div style="margin-top: 8px;">
-              <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">4-ROTOR PROPULSION HEALTH (ESC)</div>
-              <div class="motor-bars-grid">
-                <div class="motor-col">
-                  <div class="motor-col-bar">
-                    <div class="motor-fill" id="motor1Fill" style="height: 68%;"></div>
-                  </div>
-                  <div class="motor-title">M1 (FL)</div>
-                  <div class="motor-rpm" id="motor1Rpm">5420</div>
-                </div>
-                <div class="motor-col">
-                  <div class="motor-col-bar">
-                    <div class="motor-fill" id="motor2Fill" style="height: 70%;"></div>
-                  </div>
-                  <div class="motor-title">M2 (FR)</div>
-                  <div class="motor-rpm" id="motor2Rpm">5500</div>
-                </div>
-                <div class="motor-col">
-                  <div class="motor-col-bar">
-                    <div class="motor-fill" id="motor3Fill" style="height: 67%;"></div>
-                  </div>
-                  <div class="motor-title">M3 (RL)</div>
-                  <div class="motor-rpm" id="motor3Rpm">5390</div>
-                </div>
-                <div class="motor-col">
-                  <div class="motor-col-bar">
-                    <div class="motor-fill" id="motor4Fill" style="height: 69%;"></div>
-                  </div>
-                  <div class="motor-title">M4 (RR)</div>
-                  <div class="motor-rpm" id="motor4Rpm">5460</div>
-                </div>
+            <div class="intercom-instruction">
+              Broadcast your voice directly to trapped survivors via Drone #01 high-decibel acoustic horn (110 dB).
+            </div>
+
+            <!-- Audio Waveform Oscilloscope Visualizer -->
+            <div class="comms-wave-container">
+              <canvas id="commsWaveCanvas"></canvas>
+              <div class="wave-overlay-text">LIVE AUDIO SPECTRUM</div>
+            </div>
+
+            <!-- Big Push-To-Talk Button -->
+            <div class="ptt-action-zone">
+              <button class="btn-comms-ptt" id="btnCommsPtt">
+                <div class="ptt-ring-pulse"></div>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="commsPttLabel">PUSH TO TALK (HOLD TO SPEAK)</span>
+              </button>
+              <div class="ptt-lock-row">
+                <button class="btn-ptt-lock" id="btnCommsPttLock">🔒 Lock Mic</button>
+                <span class="ptt-hint">Or click to toggle continuous open mic</span>
               </div>
             </div>
 
-            <!-- Subsystem Details -->
-            <div style="margin-top: 10px;">
+            <!-- Text-to-Speech Emergency Voice Broadcaster -->
+            <div class="tts-broadcast-box">
+              <div class="tts-box-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span>EMERGENCY VOICE TEMPLATES (ONE-TOUCH HAIL)</span>
+              </div>
+
+              <!-- Quick Broadcast Buttons -->
+              <div class="bcast-preset-grid">
+                <button class="bcast-preset-chip" data-text="Attention! NDRF Rescue is on site. We have located your position. Stay calm, emergency rescue teams are approaching!">
+                  🚨 "NDRF is here, stay calm!"
+                </button>
+                <button class="bcast-preset-chip" data-text="Caution! Structural collapse danger nearby. Remain inside your safe void, do not move!">
+                  ⚠️ "Hazard nearby, stay in pocket"
+                </button>
+                <button class="bcast-preset-chip" data-text="Emergency payload incoming! First aid kit and water rations are dropping from the drone now.">
+                  💧 "Emergency payload dropping now"
+                </button>
+                <button class="bcast-preset-chip" data-text="Audio hail! If you can hear this drone, please tap three times on rubble or shout out!">
+                  🔊 "Tap on pipes or shout if you hear us"
+                </button>
+              </div>
+
+              <!-- Custom Text Announcement Input -->
+              <div class="custom-bcast-row">
+                <input type="text" id="inpBroadcastText" class="tactical-input" placeholder="Type custom announcement to broadcast aloud...">
+                <button class="btn-trigger-broadcast" id="btnTriggerBroadcast">🔊 HAIL</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 2: Multi-Channel Tactical Chat & Dispatch Stream -->
+          <div class="tactical-card comms-chat-card">
+            <div class="chat-card-header">
+              <div class="card-title-tactical">
+                <span class="card-title-icon">💬</span>
+                <span>TACTICAL MESSAGE DISPATCH STREAM</span>
+              </div>
+              <div class="channel-selector-row">
+                <button class="comms-channel-btn active" data-channel="CH-1" data-channel-name="Channel 1: Disaster Recon (Loudspeaker)">CH-1 (Drone)</button>
+                <button class="comms-channel-btn" data-channel="CH-2" data-channel-name="Channel 2: Ground Rescue Alpha (NDRF)">CH-2 (Field)</button>
+                <button class="comms-channel-btn" data-channel="CH-3" data-channel-name="Channel 3: Air Evac & Medics">CH-3 (Air)</button>
+              </div>
+            </div>
+
+            <div class="active-channel-banner">
+              <span>ACTIVE FREQUENCY:</span>
+              <strong id="commsActiveChannelName">Channel 1: Disaster Recon (Loudspeaker Relay)</strong>
+            </div>
+
+            <!-- Messages Stream Container -->
+            <div class="comms-messages-list" id="commsMessagesList">
+              <!-- Dynamically populated by comms.js -->
+            </div>
+
+            <!-- Quick Action Command Chips -->
+            <div class="comms-quick-chips-row">
+              <button class="comms-quick-chip" data-cmd="Survivor located and responsive. Maintaining aerial visual lock.">👁️ Lock Target</button>
+              <button class="comms-quick-chip" data-cmd="Hold position over rubble pile and survey for secondary gas hazards.">🛑 Loiter & Scan</button>
+              <button class="comms-quick-chip" data-cmd="Prepare medical drop bay. Target is accessible for extraction.">📦 Prep Payload</button>
+              <button class="comms-quick-chip" data-cmd="Ground Team Alpha deployed to coordinates. ETA 4 minutes.">🏃 Ground Team En Route</button>
+            </div>
+
+            <!-- Message Input Bar -->
+            <div class="comms-input-bar">
+              <input type="text" id="inpCommsMsgText" class="tactical-input" placeholder="Send secure tactical dispatch to drone & field units (Enter to send)...">
+              <button class="btn-send-dispatch" id="btnSendCommsMsg">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>TRANSMIT</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Col 3: Connected Radios Roster & Link Health -->
+          <div class="tactical-card comms-roster-card">
+            <div class="card-title-tactical">
+              <span class="card-title-icon">📡</span>
+              <span>NETWORK NODES & TRANSCEIVERS</span>
+            </div>
+
+            <!-- Unit Nodes List -->
+            <div class="roster-nodes-list">
+              <!-- Node 1: GCS Command -->
+              <div class="roster-node-item active">
+                <div class="node-icon-box">🏢</div>
+                <div class="node-info">
+                  <div class="node-name">NDRF Base Command (GCS)</div>
+                  <div class="node-meta">Main Console • Host: Localhost:3000</div>
+                </div>
+                <div class="node-status-tag online">HOST</div>
+              </div>
+
+              <!-- Node 2: Aerial Drone #01 -->
+              <div class="roster-node-item active">
+                <div class="node-icon-box">🚁</div>
+                <div class="node-info">
+                  <div class="node-name">Drone Recon Unit #01</div>
+                  <div class="node-meta">Loudspeaker Online • RSSI: -68 dBm</div>
+                </div>
+                <div class="node-status-tag online">LINKED</div>
+              </div>
+
+              <!-- Node 3: Smartphone Recon Unit -->
+              <div class="roster-node-item active">
+                <div class="node-icon-box">📱</div>
+                <div class="node-info">
+                  <div class="node-name">Mobile Recon Camera (/mobile)</div>
+                  <div class="node-meta">Two-Way Mic Active • Port 3443 HTTPS</div>
+                </div>
+                <div class="node-status-tag standby">READY</div>
+              </div>
+
+              <!-- Node 4: NDRF Field Team Alpha -->
+              <div class="roster-node-item active">
+                <div class="node-icon-box">🚨</div>
+                <div class="node-info">
+                  <div class="node-name">Rescue Team Alpha</div>
+                  <div class="node-meta">Tactical Handheld • Ch-2 Active</div>
+                </div>
+                <div class="node-status-tag online">EN ROUTE</div>
+              </div>
+            </div>
+
+            <!-- RF Audio Diagnostics Box -->
+            <div class="comms-rf-summary">
+              <div class="rf-summary-title">RF LINK PARAMETERS</div>
               <div class="diag-row-item">
-                <span class="diag-label">Avionics Flight Controller</span>
-                <span class="diag-val" style="color: var(--green-rescue);">PIXHAWK 6X (ONLINE)</span>
+                <span class="diag-label">Intercom Sample Rate</span>
+                <span class="diag-val">48 kHz Opus (Low-Latency)</span>
               </div>
               <div class="diag-row-item">
-                <span class="diag-label">GPS RTK Precision</span>
-                <span class="diag-val" style="color: var(--cyan-primary);">± 2.4 cm (19 Sats)</span>
+                <span class="diag-label">Loudspeaker Sound Level</span>
+                <span class="diag-val" style="color: var(--green-rescue);">110 dB SPL (Acoustic Horn)</span>
               </div>
               <div class="diag-row-item">
-                <span class="diag-label">RC Uplink Radio Frequency</span>
-                <span class="diag-val">868 MHz ExpressLRS</span>
+                <span class="diag-label">Transceiver Carrier</span>
+                <span class="diag-val">868 MHz ExpressLRS / 5G Mesh</span>
               </div>
               <div class="diag-row-item">
-                <span class="diag-label">ESC Core Temperature</span>
-                <span class="diag-val">37.8 °C (Nominal)</span>
-              </div>
-              <div class="diag-row-item">
-                <span class="diag-label">Obstacle Avoidance LIDAR</span>
-                <span class="diag-val" style="color: var(--green-rescue);">CLEAR (360° RANGE)</span>
-              </div>
-              <div class="diag-row-item">
-                <span class="diag-label">Current Battery Voltage</span>
-                <span class="diag-val">22.8 V (6S LiPo 16000mAh)</span>
+                <span class="diag-label">End-to-End Voice Latency</span>
+                <span class="diag-val" style="color: var(--orange-primary);">~ 24 ms (Near-Realtime)</span>
               </div>
             </div>
           </div>
@@ -1448,7 +1208,7 @@
       <!-- FOOTER BAR matching Figma -->
       <footer class="footer-bar">
         <div class="footer-left">
-          <span>© 2026 AEROSIGHT</span>
+          <span>© 2026 A.S.A.R.D</span>
           <span class="footer-sep">|</span>
           <span>National Disaster Response Initiative</span>
         </div>
@@ -1456,7 +1216,7 @@
           <!-- Animated ECG/Telemetry line -->
           <div class="footer-pulse-wave">
             <svg width="90" height="20" viewBox="0 0 90 20" fill="none">
-              <path d="M0 10 H25 L32 2 L38 18 L44 5 L50 14 L55 10 H90" stroke="#00d2ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+              <path d="M0 10 H25 L32 2 L38 18 L44 5 L50 14 L55 10 H90" stroke="#FF6600" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
             </svg>
           </div>
           <span class="footer-motto">Together for a Safer Tomorrow.</span>
@@ -1470,7 +1230,7 @@
     <div class="tactical-modal" id="rescueModal">
       <div class="modal-header">
         <div class="modal-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
           <span>DISPATCH RESCUE TEAM</span>
@@ -1513,7 +1273,7 @@
     <div class="tactical-modal ip-webcam-modal" id="ipWebcamModal">
       <div class="modal-header">
         <div class="modal-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
             <circle cx="12" cy="12" r="2"></circle>
             <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
           </svg>
@@ -1542,7 +1302,7 @@
           <div class="copy-url-group">
             <input type="text" id="ipWebcamUrlInput" class="tactical-input" placeholder="http://192.168.1.5:8080" value="http://192.168.1.5:8080">
           </div>
-          <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">e.g. http://192.168.x.x:8080 (live /video stream is connected automatically)</div>
+          <div class="modal-hint-text" style="font-size: 11px; color: #94a3b8; margin-top: 4px;">e.g. http://192.168.x.x:8080 (live /video stream is connected automatically)</div>
         </div>
 
         <div class="mobile-connection-status" id="ipConnectionStatus">
@@ -1563,7 +1323,7 @@
     <div class="tactical-modal mobile-drone-modal" id="mobileDroneModal">
       <div class="modal-header">
         <div class="modal-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
             <rect x="5" y="2" width="14" height="20" rx="2"></rect>
             <line x1="12" y1="18" x2="12.01" y2="18"></line>
           </svg>
@@ -1608,8 +1368,8 @@
               <button class="btn-webcam-direct" id="btnUseWebcamDirect">Or Use Local PC Webcam</button>
             </div>
 
-            <div style="margin-top: 10px; padding: 6px 8px; background: rgba(0, 210, 255, 0.05); border: 1px solid rgba(0, 210, 255, 0.2); border-radius: 4px; font-size: 10.5px; color: #8fa0b5;">
-              <span style="color: #00d2ff; font-weight: 700;">💡 Mobile Camera Tip:</span> Android Chrome & Safari require HTTPS to open camera. If you see an SSL warning, tap <strong>Advanced &rarr; Proceed</strong> to allow camera.
+            <div style="margin-top: 10px; padding: 6px 8px; background: rgba(255,102,0, 0.05); border: 1px solid rgba(255,102,0, 0.2); border-radius: 4px; font-size: 10.5px; color: #8fa0b5;">
+              <span style="color: #FF6600; font-weight: 700;">💡 Mobile Camera Tip:</span> Android Chrome & Safari require HTTPS to open camera. If you see an SSL warning, tap <strong>Advanced &rarr; Proceed</strong> to allow camera.
             </div>
           </div>
         </div>
@@ -1620,7 +1380,7 @@
     <div class="tactical-modal" style="max-width: 440px;">
       <div class="modal-header">
         <div class="modal-title">
-          <span style="color: #00e5ff; font-weight: 700;">📍 MARK NEW TACTICAL PLACE</span>
+          <span style="color: #FF7700; font-weight: 700;">📍 MARK NEW TACTICAL PLACE</span>
         </div>
         <button class="modal-close-btn" id="btnClosePlaceModal">&times;</button>
       </div>
@@ -1660,7 +1420,7 @@
     <div class="tactical-modal" style="max-width: 500px;">
       <div class="modal-header">
         <div class="modal-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
@@ -1670,7 +1430,7 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">
-          AEROSIGHT connects directly to Google Earth high-resolution satellite imagery. Enter your Google Maps JavaScript API key to activate full Photorealistic 3D vector buildings and hardware-accelerated WebGL terrain.
+          A.S.A.R.D connects directly to Google Earth high-resolution satellite imagery. Enter your Google Maps JavaScript API key to activate full Photorealistic 3D vector buildings and hardware-accelerated WebGL terrain.
         </p>
         <div class="modal-form-group">
           <label for="googleApiKeyInput">Google Maps API Key (Optional)</label>
@@ -1679,8 +1439,8 @@
             Leave empty to use built-in Live Satellite 3D Earth Stream (zero setup required).
           </div>
         </div>
-        <div style="background: rgba(0, 210, 255, 0.05); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 8px 10px; font-size: 11px; color: var(--text-secondary); margin-top: 10px;">
-          <strong style="color: var(--cyan-primary);">Satellite Feed Features Active:</strong><br>
+        <div style="background: rgba(255,102,0, 0.05); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 8px 10px; font-size: 11px; color: var(--text-secondary); margin-top: 10px;">
+          <strong style="color: var(--orange-primary);">Satellite Feed Features Active:</strong><br>
           • Live 3D Tilt & Oblique Perspective (0° - 75°)<br>
           • Google Earth 25cm/px Aerial Resolution<br>
           • Real-time Drone Telemetry Satellite Tracking
@@ -1693,11 +1453,235 @@
     </div>
   </div>
 
+  <!-- MODAL: SIGNAL & RF LINK TELEMETRY DIAGNOSTICS -->
+  <div class="tactical-modal-backdrop" id="signalDiagnosticsModalBackdrop" style="display: none;">
+    <div class="tactical-modal signal-diag-modal" id="signalDiagnosticsModal" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6600" stroke-width="2">
+            <path d="M2 20h.01"></path>
+            <path d="M7 20v-4"></path>
+            <path d="M12 20v-8"></path>
+            <path d="M17 20V8"></path>
+            <path d="M22 4v16"></path>
+          </svg>
+          <span>AVIONICS RF SIGNAL & LINK DIAGNOSTICS</span>
+        </div>
+        <button class="modal-close-btn" id="closeSignalDiagModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Status summary card -->
+        <div class="diag-status-banner">
+          <div class="diag-status-dot pulse-dot-green"></div>
+          <div class="diag-status-content">
+            <div class="diag-status-title" id="diagLinkStatus">OPTIMAL MILITARY-GRADE CARRIER LINK</div>
+            <div class="diag-status-sub">GCS Ground Station &lt;--&gt; Aerial Node #01 Forward Relay</div>
+          </div>
+        </div>
+
+        <!-- Metric grid -->
+        <div class="diag-metrics-grid">
+          <div class="diag-metric-box">
+            <div class="diag-box-label">LINK QUALITY</div>
+            <div class="diag-box-val" id="diagLinkQuality" style="color: var(--green-rescue);">98%</div>
+            <div class="diag-box-hint">Forward Error Rate: 0.00%</div>
+          </div>
+          <div class="diag-metric-box">
+            <div class="diag-box-label">CARRIER RSSI</div>
+            <div class="diag-box-val" id="diagSignalDbm" style="color: #FF6600;">-68 dBm</div>
+            <div class="diag-box-hint">Strong Received Signal</div>
+          </div>
+          <div class="diag-metric-box">
+            <div class="diag-box-label">ROUND-TRIP PING</div>
+            <div class="diag-box-val" id="diagLatency" style="color: #00e676;">22 ms</div>
+            <div class="diag-box-hint">Low Jitter (± 1.8 ms)</div>
+          </div>
+          <div class="diag-metric-box">
+            <div class="diag-box-label">DOWNLINK BITRATE</div>
+            <div class="diag-box-val" id="diagThroughput">14.2 Mbps</div>
+            <div class="diag-box-hint">Full HD H.264 Stream</div>
+          </div>
+        </div>
+
+        <!-- Detailed technical specs -->
+        <div class="diag-details-list">
+          <div class="diag-row-item">
+            <span class="diag-label">Carrier Frequency</span>
+            <span class="diag-val" id="diagFrequency">868 MHz ExpressLRS + 2.4 GHz</span>
+          </div>
+          <div class="diag-row-item">
+            <span class="diag-label">Link Telemetry Protocol</span>
+            <span class="diag-val" id="diagProtocol">MAVLink v2 / AES-128 GCM</span>
+          </div>
+          <div class="diag-row-item">
+            <span class="diag-label">Signal-to-Noise Ratio (SNR)</span>
+            <span class="diag-val" style="color: var(--green-rescue);">28.4 dB (High Fidelity)</span>
+          </div>
+          <div class="diag-row-item">
+            <span class="diag-label">Antenna Diversity Architecture</span>
+            <span class="diag-val">Dual Circular Polarized Patch (5.8 dBi)</span>
+          </div>
+          <div class="diag-row-item">
+            <span class="diag-label">Multipath & Fading Immunity</span>
+            <span class="diag-val" style="color: var(--orange-primary);">OFDM 64-QAM Adaptive Modulation</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCloseSignalDiagModalBottom" onclick="document.getElementById('signalDiagnosticsModalBackdrop').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING QUICK 2-WAY COMMS BUTTON (Accessible from all views) -->
+  <button class="floating-comms-btn" id="btnToggleQuickComms" title="Toggle Quick Two-Way Comms & Loudspeaker Drawer">
+    <div class="comms-btn-pulse"></div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+      <line x1="12" y1="19" x2="12" y2="23"></line>
+      <line x1="8" y1="23" x2="16" y2="23"></line>
+    </svg>
+    <span>2-WAY COMMS</span>
+  </button>
+
+  <!-- FLOATING QUICK COMMS SLIDE-OUT DRAWER -->
+  <div class="quick-comms-drawer" id="quickCommsDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        </svg>
+        <span>TACTICAL 2-WAY COMMS & LOUDSPEAKER</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="btn-expand-full-comms" onclick="ViewsManager.switchView('two-way-comms'); document.getElementById('quickCommsDrawer').classList.remove('open');">⛶ Full Console</button>
+        <button class="drawer-close-btn" id="btnCloseQuickComms">&times;</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <!-- Quick PTT Action -->
+      <button class="btn-quick-ptt" id="btnQuickCommsPtt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        </svg>
+        <span>PUSH TO TALK (BROADCAST TO DRONE)</span>
+      </button>
+
+      <!-- Mini message stream -->
+      <div class="quick-messages-container" id="quickCommsMessagesList"></div>
+
+      <!-- Quick response actions -->
+      <div class="quick-dispatch-actions">
+        <button class="tactical-btn mini" onclick="CommsManager.sendTextMessage('NDRF Base confirms target. Hold loiter pattern.')">Confirm Target</button>
+        <button class="tactical-btn mini" onclick="CommsManager.broadcastLoudspeakerMessage('Attention! NDRF Rescue is approaching your position now. Stay calm!')">Broadcast Hail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORENSIC INCIDENT SNAPSHOT INSPECTION MODAL -->
+  <div class="tactical-modal-backdrop" id="snapshotViewerModalBackdrop" style="display: none;">
+    <div class="tactical-modal snapshot-viewer-modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span id="modalSnapTitle">FORENSIC OPTICAL SNAPSHOT - TARGET #V001</span>
+        </div>
+        <button class="modal-close-btn" id="btnCloseSnapshotModal">&times;</button>
+      </div>
+
+      <!-- Disaster Classification Top Alert Banner -->
+      <div class="snapshot-disaster-banner" id="modalSnapDisasterBanner">
+        <div class="disaster-badge-pill" id="modalSnapDisasterBadge">
+          <span class="disaster-dot-pulse"></span>
+          <span id="modalSnapDisasterText">DISASTER CLASSIFIED: EARTHQUAKE (STRUCTURAL COLLAPSE) [94% CONF]</span>
+        </div>
+        <span class="dedup-badge-pill" id="modalSnapDedupBadge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          VERIFIED UNIQUE TARGET (DEDUPLICATION LOCKED)
+        </span>
+      </div>
+
+      <div class="modal-body snapshot-modal-body">
+        <!-- Main High-Resolution Photo Container with Red Box Reticle -->
+        <div class="snapshot-frame-container">
+          <img src="/assets/victim_v001_snapshot.jpg" alt="Victim Detection Snapshot" class="snapshot-full-img" id="modalSnapImg">
+          <div class="snapshot-scanline-overlay"></div>
+          <div class="snapshot-hud-watermark">
+            <span>A.S.A.R.D OPTICAL RECON</span>
+            <span id="modalSnapTimestamp">12:25:00 UTC</span>
+          </div>
+        </div>
+
+        <!-- Tactical Metadata Breakdown Grid -->
+        <div class="snapshot-meta-grid">
+          <div class="snap-meta-card">
+            <span class="meta-label">TARGET ID</span>
+            <span class="meta-val highlight-cyan" id="modalSnapId">#V001</span>
+          </div>
+          <div class="snap-meta-card">
+            <span class="meta-label">DETECTION CONFIDENCE</span>
+            <span class="meta-val highlight-red" id="modalSnapConf">94% (OPENCV AI)</span>
+          </div>
+          <div class="snap-meta-card">
+            <span class="meta-label">RESCUE COORDINATES</span>
+            <div class="coords-val-row">
+              <span class="meta-val highlight-green" id="modalSnapCoords">10.0234° N, 78.1234° E</span>
+              <button class="copy-inline-btn" id="btnCopyModalCoords" title="Copy GPS Coordinates">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="snap-meta-card">
+            <span class="meta-label">RESCUE PRIORITY</span>
+            <span class="meta-val highlight-red" id="modalSnapPriority">CRITICAL</span>
+          </div>
+          <div class="snap-meta-card">
+            <span class="meta-label">DRONE ALTITUDE</span>
+            <span class="meta-val" id="modalSnapAlt">35.0 m AGL</span>
+          </div>
+          <div class="snap-meta-card">
+            <span class="meta-label">BOUNDING RETICLE</span>
+            <span class="meta-val highlight-red font-mono">RED BOX (BGR: 0, 0, 255)</span>
+          </div>
+        </div>
+
+        <div class="snapshot-notice">
+          ℹ️ <strong>Anti-Duplication Condition Active:</strong> This victim coordinate has been geo-locked. Continuous drone hovering will not capture duplicate snapshots or spam rescue dispatch alerts.
+        </div>
+      </div>
+
+      <div class="modal-footer snapshot-modal-footer">
+        <button class="btn-cancel" id="btnCloseSnapshotModalBtn">Close Viewer</button>
+        <button class="btn-action-ghost" id="btnCopySnapshotCoords">Copy GPS Coords</button>
+        <a href="/assets/victim_v001_snapshot.jpg" download="A.S.A.R.D_Victim_V001_Snapshot.jpg" class="btn-dispatch" id="btnDownloadSnapshot">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download Snapshot (JPG)
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- SCRIPTS -->
-  <!-- Google Maps JavaScript API (Satellite 3D & Hybrid) -->
+  <!-- Tactical Map Engines (Leaflet & Google Maps) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://maps.googleapis.com/maps/api/js?v=weekly&libraries=places,geometry,drawing" id="googleMapsApiScript"></script>
 
   <!-- QRCode.js library for scanning from mobile -->
@@ -1705,13 +1689,14 @@
 
   <!-- Application Modules -->
   <script src="/js/telemetry.js"></script>
+  <script src="/js/comms.js"></script>
   <script src="/js/map-google3d.js"></script>
   <script src="/js/camera-feed.js"></script>
   <script src="/js/detections.js"></script>
   <script src="/js/target-details.js"></script>
   <script src="/js/mission.js"></script>
   <script src="/js/rescue-log.js"></script>
-  <script src="/js/views.js"></script>
+  <script src="/js/views.js?v=20261009_2"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

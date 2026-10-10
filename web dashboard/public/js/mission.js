@@ -1,6 +1,13 @@
 /**
- * AEROSIGHT - Mission Controls Module
- * Start Mission, Pause, Return Home, Emergency Land, Flight Mode & Search Patterns
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * Mission Controls Module (mission.js)
+ *
+ * Handles drone mission buttons:
+ *   - Start / Pause / Resume autonomous search mission
+ *   - Return to Home and Emergency Land commands
+ *   - Set flight mode and search pattern (grid, spiral, etc.)
+ * =============================================================================
  */
 
 const MissionManager = (() => {

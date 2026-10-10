@@ -1,5 +1,5 @@
 /**
- * AEROSIGHT - 3D Tactical Terrain & Drone Simulation Map (Three.js)
+ * A.S.A.R.D - 3D Tactical Terrain & Drone Simulation Map (Three.js)
  * Features:
  * 1. Real Google Maps 3D Satellite & Hybrid Aerial View:
  *    Dynamically fetches and stitches live Google Satellite tiles onto 3D terrain for ANY user location!
@@ -1536,7 +1536,7 @@ const Map3DManager = (() => {
         lat: gps.lat,
         lon: gps.lon,
         alt: targetAltM,
-        speed: 8,
+        speed: 10,
         action: idx === 0 ? 'Takeoff & Align' : (idx === sweepWaypoints.length - 1 ? 'Return & Land' : 'Scan Pass')
       };
     });

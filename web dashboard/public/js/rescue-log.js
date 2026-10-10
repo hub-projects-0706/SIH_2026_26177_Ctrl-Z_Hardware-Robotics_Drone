@@ -1,5 +1,5 @@
 /**
- * AEROSIGHT - Rescue Coordinates Log Module
+ * A.S.A.R.D - Rescue Coordinates Log Module
  * Manages rescue mission dispatches, coordinates tracking, and CSV logs
  */
 

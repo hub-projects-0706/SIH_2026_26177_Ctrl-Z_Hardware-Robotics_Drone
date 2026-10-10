@@ -1,48 +1,50 @@
 /* ==========================================================================
-   AEROSIGHT DISASTER RESPONSE PLATFORM - DESIGN SYSTEM & GLOBAL STYLES
+   A.S.A.R.D - AUTONOMOUS SEARCH AND RESCUE DRONE
+   DESIGN SYSTEM & GLOBAL STYLES
+   
+   Color Palette: White (#FFFFFF), Black (#000000 / #111111), Orange (#FF6600 / #FF8C00)
+   Student Project | SIH 2024
    ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   All colors, fonts, and layout values in one place for easy customization
+   -------------------------------------------------------------------------- */
 :root {
-  /* Clean Tactical Dark Theme (Zero Neon) */
-  --bg-darkest: #070b12;
-  --bg-app: #0b111c;
-  --bg-card: #101826;
-  --bg-card-hover: #152033;
-  --bg-card-subtle: #1a273e;
-  --bg-input: #0c1421;
+  /* Background Colors - Clean white-based theme */
+  --bg-app: #f5f5f5;        /* Light gray page background */
+  --bg-card: #ffffff;       /* Pure white card background */
+  --bg-card-hover: #fff8f3; /* Slight orange tint on hover */
+  --bg-dark: #111111;       /* Near-black for header/sidebar */
+  --bg-darker: #000000;     /* Pure black accents */
 
-  /* Tactical Accents - Clean, High Contrast */
-  --cyan-primary: #38bdf8;
-  --cyan-bright: #60a5fa;
-  --cyan-glow: transparent;
-  --cyan-subtle: rgba(56, 189, 248, 0.12);
+  /* Primary Accent - Orange */
+  --orange-primary: #FF6600;
+  --orange-bright: #FF8C00;
+  --orange-subtle: rgba(255, 102, 0, 0.12);
+  --orange-border: rgba(255, 102, 0, 0.4);
 
-  --red-alert: #ef4444;
-  --red-alert-glow: transparent;
-  --red-alert-bg: rgba(239, 68, 68, 0.15);
-
-  --yellow-hazard: #f59e0b;
-  --yellow-hazard-bg: rgba(245, 158, 11, 0.15);
-
-  --green-rescue: #10b981;
-  --green-rescue-glow: transparent;
-  --green-rescue-bg: rgba(16, 185, 129, 0.15);
-
-  --blue-action: #2563eb;
-  --blue-action-hover: #3b82f6;
+  /* Alert Colors (kept for semantic meaning, orange-tinted) */
+  --red-alert: #cc3300;
+  --red-alert-bg: rgba(204, 51, 0, 0.1);
+  --yellow-hazard: #cc7700;
+  --yellow-hazard-bg: rgba(204, 119, 0, 0.1);
+  --green-rescue: #337733;
+  --green-rescue-bg: rgba(51, 119, 51, 0.1);
+  --blue-action: #0284c7;
+  --blue-action-hover: #0369a1;
 
   /* Typography Colors */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-dark: #334155;
+  --text-primary: #111111;    /* Near-black for main text */
+  --text-secondary: #444444;  /* Dark gray secondary text */
+  --text-muted: #777777;      /* Muted gray hint text */
+  --text-white: #ffffff;      /* White text on dark backgrounds */
 
-  /* Borders & Shadows - Crisp, Clean, Zero Halos */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-card: rgba(255, 255, 255, 0.12);
-  --border-active: #38bdf8;
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --glow-shadow: none;
+  /* Borders & Shadows - Clean, professional */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-card: rgba(0, 0, 0, 0.15);
+  --border-active: #FF6600;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 
   /* Fonts */
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -54,13 +56,16 @@
   --sidebar-collapsed-width: 64px;
 }
 
-/* Global Reset */
+/* --------------------------------------------------------------------------
+   GLOBAL RESET - Remove default browser spacing
+   -------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* Base body: white background, black text */
 html, body {
   width: 100%;
   height: 100%;
@@ -73,24 +78,24 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars - orange accent */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-darkest);
+  background: #f0f0f0;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 210, 255, 0.2);
+  background: rgba(255, 102, 0, 0.3);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cyan-primary);
+  background: var(--orange-primary);
 }
 
 /* ==========================================================================
-   HEADER BAR
+   HEADER BAR - Black background with orange accents
    ========================================================================== */
 .header-bar {
   position: sticky;
@@ -98,14 +103,14 @@ html, body {
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: linear-gradient(180deg, #07111f 0%, #0a1728 100%);
-  border-bottom: 1px solid var(--border-card);
+  background: #111111;          /* Black header */
+  border-bottom: 2px solid var(--orange-primary); /* Orange bottom border */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .header-left {
@@ -114,10 +119,11 @@ html, body {
   gap: 14px;
 }
 
+/* Icon buttons in the header */
 .icon-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: #aaaaaa;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -127,10 +133,11 @@ html, body {
   transition: all 0.2s ease;
 }
 .icon-btn:hover {
-  color: var(--cyan-primary);
-  background: var(--cyan-subtle);
+  color: var(--orange-primary);
+  background: var(--orange-subtle);
 }
 
+/* Logo cluster - holds icon and brand name */
 .logo-cluster {
   display: flex;
   align-items: center;
@@ -138,9 +145,10 @@ html, body {
   text-decoration: none;
 }
 .logo-icon svg {
-  filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.6));
+  filter: drop-shadow(0 0 4px rgba(255, 102, 0, 0.5));
 }
 
+/* Brand name and subtitle */
 .brand-text {
   display: flex;
   flex-direction: column;
@@ -150,36 +158,37 @@ html, body {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 2.5px;
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+  color: var(--orange-primary);  /* Orange brand name */
   line-height: 1.1;
 }
 .brand-sub {
   font-size: 10.5px;
-  color: var(--text-secondary);
+  color: #ffffff;
   letter-spacing: 0.3px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
-/* Header Center Motto */
+/* Header Center Motto text */
 .header-center {
   display: flex;
   align-items: center;
   gap: 10px;
   font-family: var(--font-tactical);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   letter-spacing: 1.8px;
-  color: var(--text-muted);
 }
 .motto-sep {
-  color: rgba(0, 210, 255, 0.3);
+  color: var(--orange-primary);
+  font-weight: 700;
 }
 .motto-tag {
-  transition: color 0.3s;
+  color: #ffffff;
+  font-weight: 700;
+  transition: color 0.2s;
 }
 .motto-tag:hover {
-  color: var(--cyan-primary);
+  color: var(--orange-bright);
 }
 
 /* Header Right Area */
@@ -189,18 +198,19 @@ html, body {
   gap: 16px;
 }
 
+/* Disaster Alert Pill - Tactical Orange & White */
 .disaster-alert-pill {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--red-alert-bg);
-  border: 1px solid var(--red-alert);
+  background: rgba(255, 102, 0, 0.12);
+  border: 1.5px solid var(--orange-primary);
   padding: 5px 14px;
   border-radius: 20px;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
 }
-
 .alert-icon-wrap {
-  color: var(--red-alert);
+  color: var(--orange-primary);
   display: flex;
   align-items: center;
 }
@@ -210,13 +220,14 @@ html, body {
 }
 .alert-title {
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11.5px;
   line-height: 1.2;
 }
 .alert-sub {
-  color: #ff99aa;
-  font-size: 10px;
+  color: var(--orange-bright);
+  font-size: 10.5px;
+  font-weight: 600;
 }
 
 /* Notification Button & Badge */
@@ -227,15 +238,16 @@ html, body {
   position: relative;
   width: 36px;
   height: 36px;
-  background: rgba(14, 27, 44, 0.8);
-  border: 1px solid var(--border-card);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
+  color: #ffffff;
 }
 .notif-badge {
   position: absolute;
   top: -2px;
   right: -2px;
-  background: var(--red-alert);
+  background: var(--orange-primary);
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
@@ -247,16 +259,16 @@ html, body {
   justify-content: center;
 }
 
-/* Notification Dropdown */
+/* Notification Dropdown - white background, black text */
 .notif-dropdown {
   position: absolute;
   top: 48px;
   right: 0;
   width: 310px;
-  background: #0d1a2c;
-  border: 1px solid var(--border-active);
+  background: #ffffff;
+  border: 1px solid var(--border-card);
   border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
   display: none;
   z-index: 200;
   overflow: hidden;
@@ -269,11 +281,12 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  background: #081220;
+  background: #111111;
   border-bottom: 1px solid var(--border-subtle);
   font-family: var(--font-tactical);
   font-size: 12px;
   letter-spacing: 1px;
+  color: #ffffff;
 }
 .notif-count-tag {
   background: var(--red-alert-bg);
@@ -291,11 +304,12 @@ html, body {
   display: flex;
   gap: 10px;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   transition: background 0.2s;
+  background: #ffffff;
 }
 .notif-item:hover {
-  background: rgba(0, 210, 255, 0.06);
+  background: #fff8f3;
 }
 .notif-dot {
   width: 8px;
@@ -304,9 +318,9 @@ html, body {
   margin-top: 4px;
   flex-shrink: 0;
 }
-.notif-item.critical .notif-dot { background: var(--red-alert); box-shadow: 0 0 6px var(--red-alert); }
-.notif-item.warning .notif-dot { background: var(--yellow-hazard); box-shadow: 0 0 6px var(--yellow-hazard); }
-.notif-item.info .notif-dot { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-primary); }
+.notif-item.critical .notif-dot { background: var(--red-alert); }
+.notif-item.warning .notif-dot { background: var(--yellow-hazard); }
+.notif-item.info .notif-dot { background: var(--orange-primary); }
 .notif-msg {
   font-size: 11.5px;
   color: var(--text-primary);
@@ -318,7 +332,7 @@ html, body {
   margin-top: 3px;
 }
 
-/* Officer Profile */
+/* Officer Profile (top right user badge) */
 .officer-profile {
   display: flex;
   align-items: center;
@@ -329,13 +343,12 @@ html, body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #112239;
-  border: 1.5px solid var(--cyan-primary);
-  color: var(--cyan-primary);
+  background: #f0f0f0;
+  border: 1.5px solid var(--orange-primary);
+  color: var(--orange-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
 }
 .officer-meta {
   display: flex;
@@ -344,17 +357,17 @@ html, body {
 .officer-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-white);
 }
 .officer-dept {
   font-size: 10.5px;
-  color: var(--cyan-primary);
+  color: var(--orange-primary);
   font-family: var(--font-tactical);
   letter-spacing: 1px;
 }
 
 /* ==========================================================================
-   MAIN APP LAYOUT
+   MAIN APP LAYOUT - Sidebar + Main content area
    ========================================================================== */
 .app-layout {
   display: flex;
@@ -363,12 +376,12 @@ html, body {
 }
 
 /* ==========================================================================
-   LEFT SIDEBAR NAVIGATION
+   LEFT SIDEBAR NAVIGATION - Black background, orange active state
    ========================================================================== */
 .sidebar-nav {
   width: var(--sidebar-width);
-  background: #091322;
-  border-right: 1px solid var(--border-card);
+  background: #111111;           /* Black sidebar */
+  border-right: 1px solid #222222;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -378,6 +391,7 @@ html, body {
   z-index: 90;
 }
 
+/* Collapsed sidebar state - hides labels */
 .sidebar-nav.collapsed {
   width: var(--sidebar-collapsed-width);
 }
@@ -397,46 +411,43 @@ html, body {
   gap: 4px;
 }
 
+/* Individual nav link */
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 9px 18px;
-  color: var(--text-secondary);
+  color: #cccccc;
   text-decoration: none;
   font-size: 12.5px;
   font-weight: 500;
   transition: all 0.2s ease;
   position: relative;
 }
-
 .nav-item:hover {
   color: #ffffff;
-  background: rgba(0, 210, 255, 0.08);
+  background: rgba(255, 102, 0, 0.15);
 }
-
+/* Active nav item gets orange left border */
 .nav-item.active {
   color: #ffffff;
-  background: rgba(37, 99, 235, 0.2);
-  border-left: 3px solid var(--cyan-primary);
+  background: rgba(255, 102, 0, 0.2);
+  border-left: 3px solid var(--orange-primary);
   font-weight: 600;
 }
-
 .nav-item.active .nav-icon {
-  color: var(--cyan-bright);
+  color: var(--orange-primary);
 }
-
 .nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: #aaaaaa;
   transition: color 0.2s;
 }
-
 .nav-badge {
   margin-left: auto;
-  background: var(--red-alert);
+  background: var(--orange-primary);
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
@@ -444,41 +455,33 @@ html, body {
   border-radius: 10px;
 }
 
-/* Sidebar Footer (Tactical Drone Graphic) */
+/* Sidebar Footer - brand motto at bottom */
 .sidebar-footer {
   padding: 16px 14px 6px 14px;
   text-align: center;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid #222222;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.drone-wireframe-art svg {
-  animation: drone-hover 3s ease-in-out infinite;
-}
-@keyframes drone-hover {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
 .footer-brand-title {
   font-family: var(--font-tactical);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #ffffff;
+  color: var(--orange-primary);
   margin-top: 6px;
 }
 .footer-brand-motto {
   font-size: 9.5px;
-  color: var(--text-muted);
+  color: #666666;
   letter-spacing: 1.2px;
   line-height: 1.3;
   margin-top: 2px;
 }
 
 /* ==========================================================================
-   DASHBOARD MAIN VIEWPORT
+   DASHBOARD MAIN VIEWPORT - White background content area
    ========================================================================== */
 .dashboard-main {
   flex: 1;
@@ -486,38 +489,29 @@ html, body {
   flex-direction: column;
   gap: 12px;
   padding: 12px 14px;
-  background: var(--bg-app);
+  background: var(--bg-app);  /* Light gray/white background */
   overflow-y: auto;
 }
 
-/* Grid Rows */
+/* Grid Rows layout */
 .grid-row {
   display: grid;
   gap: 12px;
   width: 100%;
 }
-
-/* Top Row: Live Map, Camera Feed, Telemetry */
+/* Top Row: Live Map + Camera Feed (equal split, no telemetry) */
 .row-top {
-  grid-template-columns: 3.8fr 4.2fr 2fr;
-  min-height: 350px;
+  grid-template-columns: 1fr 1fr;
+  min-height: 420px;
 }
-
-/* Middle Row: AI Detections, Target Details */
 .row-middle {
   grid-template-columns: 5.8fr 4.2fr;
   min-height: 250px;
 }
 
-/* Bottom Row: Mission Controls, Rescue Coordinates Log */
-.row-bottom {
-  grid-template-columns: 1fr 1fr;
-  min-height: 160px;
-}
-
-/* Panel Card Container */
+/* Panel Card - white card with border */
 .panel-card {
-  background: var(--bg-card);
+  background: var(--bg-card);          /* White background */
   border: 1px solid var(--border-card);
   border-radius: 8px;
   box-shadow: var(--card-shadow);
@@ -528,31 +522,30 @@ html, body {
   transition: border-color 0.2s;
 }
 .panel-card:hover {
-  border-color: rgba(0, 210, 255, 0.32);
+  border-color: var(--orange-border);
 }
 
-/* Card Header */
+/* Card Header - black strip with orange bar indicator */
 .card-header {
   height: 38px;
   padding: 0 12px;
-  background: linear-gradient(90deg, rgba(14, 28, 48, 0.9) 0%, rgba(10, 20, 36, 0.8) 100%);
-  border-bottom: 1px solid var(--border-subtle);
+  background: #111111;                /* Black card headers */
+  border-bottom: 1px solid #222222;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
-
 .card-title-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+/* Orange accent bar on left of card title */
 .card-header-bar {
   width: 3px;
   height: 14px;
-  background: var(--cyan-primary);
-  box-shadow: 0 0 6px var(--cyan-primary);
+  background: var(--orange-primary);
   border-radius: 1px;
 }
 .card-title {
@@ -562,18 +555,17 @@ html, body {
   letter-spacing: 1.2px;
   color: #ffffff;
 }
-
 .card-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Generic Icon Action Button */
+/* Icon action button inside card headers */
 .icon-action-btn {
-  background: rgba(0, 210, 255, 0.08);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 4px;
@@ -583,16 +575,16 @@ html, body {
   transition: all 0.2s;
 }
 .icon-action-btn:hover {
-  background: var(--cyan-subtle);
-  color: var(--cyan-primary);
-  border-color: var(--cyan-primary);
+  background: var(--orange-primary);
+  color: #ffffff;
+  border-color: var(--orange-primary);
 }
 
-/* Header Text Action Button */
+/* Text action button inside card headers */
 .header-action-btn {
-  background: rgba(0, 210, 255, 0.08);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
+  background: rgba(255, 102, 0, 0.15);
+  border: 1px solid var(--orange-border);
+  color: #ffffff;
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 4px;
@@ -600,28 +592,54 @@ html, body {
   align-items: center;
   gap: 6px;
   font-size: 11.5px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   transition: all 0.2s;
 }
 .header-action-btn:hover, .header-action-btn.active {
-  background: rgba(0, 160, 255, 0.25);
-  border-color: var(--cyan-primary);
+  background: var(--orange-primary);
+  border-color: var(--orange-primary);
   color: #ffffff;
 }
 
-/* Toggle Pill Group (e.g. 2D / 3D) */
+/* Tactical buttons (used in toolbars and modals) */
+.tactical-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: var(--font-tactical);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+.tactical-btn:hover {
+  background: rgba(255, 102, 0, 0.25);
+  border-color: var(--orange-primary);
+  color: #ffffff;
+}
+.tactical-btn.mini {
+  padding: 2px 7px;
+  font-size: 10.5px;
+}
+
+/* Toggle Pill Group (e.g. 2D / 3D map toggle) */
 .toggle-pill-group {
   display: flex;
-  background: rgba(8, 16, 28, 0.8);
-  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   padding: 2px;
 }
 .toggle-pill {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #cccccc;
   font-family: var(--font-tactical);
   font-size: 11.5px;
   font-weight: 700;
@@ -631,9 +649,8 @@ html, body {
   transition: all 0.2s;
 }
 .toggle-pill.active {
-  background: var(--cyan-primary);
-  color: #04101e;
-  box-shadow: 0 0 8px var(--cyan-glow);
+  background: var(--orange-primary);  /* Orange active toggle */
+  color: #ffffff;
 }
 
 /* Status Pill Green (In Flight) */
@@ -652,13 +669,12 @@ html, body {
   color: var(--green-rescue);
 }
 
-/* Pulsing Dots */
+/* Pulsing animated dots (live status indicators) */
 .pulse-dot-green {
   width: 6px;
   height: 6px;
   background: var(--green-rescue);
   border-radius: 50%;
-  box-shadow: 0 0 6px var(--green-rescue);
   animation: pulse-dot 1.5s infinite;
 }
 @keyframes pulse-dot {
@@ -666,17 +682,17 @@ html, body {
   50% { opacity: 0.4; transform: scale(1.3); }
 }
 
-/* Footer Bar */
+/* Footer Bar at the bottom of the page */
 .footer-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: #08111e;
-  border: 1px solid var(--border-subtle);
+  background: #111111;
+  border: 1px solid #222222;
   border-radius: 6px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: #888888;
   margin-top: 4px;
 }
 .footer-left {
@@ -694,26 +710,80 @@ html, body {
 }
 .footer-motto {
   font-style: italic;
-  color: var(--text-secondary);
+  color: var(--orange-primary);
 }
 
 /* ==========================================================================
-   RESPONSIVE BREAKPOINTS
+   FASTAPI ML MODEL STATUS & SELECTOR BADGE
    ========================================================================== */
-@media (max-width: 1300px) {
-  .row-top {
-    grid-template-columns: 1fr 1fr;
-  }
-  .telemetry-card {
-    grid-column: span 2;
-  }
+.ml-model-badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #111111;
+  border: 1px solid var(--orange-border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-left: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
-
-@media (max-width: 1024px) {
-  .row-top, .row-middle, .row-bottom {
-    grid-template-columns: 1fr;
-  }
-  .header-center {
-    display: none;
-  }
+.ml-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #777777;
+  display: inline-block;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.ml-status-dot.online {
+  background: #00e676;
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.8);
+}
+.ml-status-dot.loading {
+  background: var(--orange-primary);
+  box-shadow: 0 0 6px rgba(255, 102, 0, 0.8);
+  animation: pulse-orange 1s infinite alternate;
+}
+@keyframes pulse-orange {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+.ml-status-dot.offline {
+  background: var(--red-alert);
+  box-shadow: 0 0 6px rgba(204, 51, 0, 0.6);
+}
+.ml-model-select {
+  background: transparent;
+  color: var(--orange-bright);
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  padding: 0 2px;
+  font-family: inherit;
+}
+.ml-model-select option {
+  background: #111111;
+  color: #ffffff;
+  padding: 4px;
+}
+.ml-reload-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s, transform 0.3s;
+}
+.ml-reload-btn:hover {
+  opacity: 1;
+  color: var(--orange-primary);
+  transform: rotate(90deg);
 }

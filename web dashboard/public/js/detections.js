@@ -1,6 +1,11 @@
 /**
- * AEROSIGHT - AI Detection Results Module
- * Handles loading, filtering, rendering, and selecting AI detections
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * AI Detection Module (detections.js)
+ *
+ * Receives AI-detected objects (victims, hazards) from the server
+ * and shows them as cards on the dashboard. Supports priority filtering.
+ * =============================================================================
  */
 
 const DetectionsManager = (() => {
@@ -34,7 +39,16 @@ const DetectionsManager = (() => {
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          if (msg.type === 'new_detection' && msg.data) {
+          if (msg.type === 'disaster_classified' && msg.disaster) {
+            const dis = msg.disaster;
+            const disasterTextEl = document.getElementById('dtDisaster');
+            if (disasterTextEl) {
+              disasterTextEl.textContent = dis.type;
+            }
+            if (window.showToast) {
+              window.showToast(`🚨 DISASTER CLASSIFIED: ${dis.type.toUpperCase()} [${dis.confidence}% CONF]`);
+            }
+          } else if (msg.type === 'new_detection' && msg.data) {
             addOrUpdateDetection(msg.data);
           } else if (msg.type === 'clear_detections') {
             clearLocalDetections();
@@ -197,16 +211,40 @@ const DetectionsManager = (() => {
         <td>${item.locationStr}</td>
         <td>${rescueHtml}</td>
         <td style="color:var(--text-muted); font-family:var(--font-tactical); font-size:11px;">${item.time}</td>
-        <td><img src="${item.image}" class="table-thumb-img" alt="thumb"></td>
-        <td><button class="btn-table-view" data-id="${item.id}">View</button></td>
+        <td><img src="${item.snapshot || item.image}" class="table-thumb-img" alt="thumb" title="Click to inspect snapshot" style="cursor: pointer;"></td>
+        <td><button class="btn-table-view btn-view-snapshot" data-id="${item.id}" title="Inspect full-resolution optical snapshot with red bounding box">View Snapshot</button></td>
       `;
 
       // Row click listener
       tr.addEventListener('click', (e) => {
-        if (!e.target.closest('.copy-inline-btn')) {
+        if (!e.target.closest('.copy-inline-btn') && !e.target.closest('.btn-view-snapshot') && !e.target.closest('.table-thumb-img')) {
           selectTarget(item.id);
         }
       });
+
+      // View Snapshot button listener
+      const snapBtn = tr.querySelector('.btn-view-snapshot');
+      if (snapBtn) {
+        snapBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectTarget(item.id);
+          if (window.TargetDetailsManager && TargetDetailsManager.openSnapshotViewer) {
+            TargetDetailsManager.openSnapshotViewer(item);
+          }
+        });
+      }
+
+      // Thumbnail click opens snapshot viewer
+      const thumbImg = tr.querySelector('.table-thumb-img');
+      if (thumbImg) {
+        thumbImg.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectTarget(item.id);
+          if (window.TargetDetailsManager && TargetDetailsManager.openSnapshotViewer) {
+            TargetDetailsManager.openSnapshotViewer(item);
+          }
+        });
+      }
 
       // Inline copy button
       const copyBtn = tr.querySelector('.copy-inline-btn');

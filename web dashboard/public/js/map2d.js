@@ -1,5 +1,5 @@
 /**
- * AEROSIGHT - 2D Tactical Satellite Map Module (Leaflet)
+ * A.S.A.R.D - 2D Tactical Satellite Map Module (Leaflet)
  */
 
 const Map2DManager = (() => {

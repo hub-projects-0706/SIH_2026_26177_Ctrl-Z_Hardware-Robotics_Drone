@@ -1,10 +1,14 @@
 /**
- * AEROSIGHT - Drone Camera Feed Module
- * Supports:
- * 1. Live Smartphone Camera streaming as the Drone Recon Feed via WebSocket
- * 2. Real-time FLIR Ironbow Thermal heat filter transform
- * 3. Local PC Webcam direct connection
- * 4. Split-view, PIP, Swap, Fullscreen, and tactical HUD reticles
+ * =============================================================================
+ * A.S.A.R.D - Autonomous Search And Rescue Drone
+ * Camera Feed Module (camera-feed.js)
+ *
+ * Handles the live drone camera video:
+ *   - Streams video from a smartphone (IP Webcam app) via WebSocket
+ *   - Supports PC webcam as a local fallback
+ *   - Applies thermal FLIR color filter (Ironbow palette)
+ *   - Shows fullscreen, picture-in-picture, and HUD reticle overlays
+ * =============================================================================
  */
 
 const CameraFeedManager = (() => {
@@ -77,6 +81,7 @@ const CameraFeedManager = (() => {
     setupMobileDroneModal();
     setupIpWebcamModal();
     setupTestImageUpload();
+    initFastApiMlControls();
     setupWebSocket();
     startLiveTimestamp();
   }
@@ -109,7 +114,7 @@ const CameraFeedManager = (() => {
     }
   }
 
-  // 1. WebSocket Client: Connects to AEROSIGHT Server
+  // 1. WebSocket Client: Connects to A.S.A.R.D Server
   function setupWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
@@ -179,6 +184,17 @@ const CameraFeedManager = (() => {
     const modalStatus = document.getElementById('mobileModalStatus');
     const modalStatusDot = document.getElementById('mobileModalStatusDot');
     const modalStatusText = document.getElementById('mobileModalStatusText');
+    const targetLockLabel = document.getElementById('targetLockLabel');
+
+    if (targetLockLabel) {
+      if (connected) {
+        targetLockLabel.textContent = 'CONNECTED';
+        targetLockLabel.className = 'target-lock-label connected';
+      } else {
+        targetLockLabel.textContent = 'NOT CONNECTED';
+        targetLockLabel.className = 'target-lock-label not-connected';
+      }
+    }
 
     if (connected) {
       if (liveBadge) liveBadge.style.display = 'flex';
@@ -292,25 +308,24 @@ const CameraFeedManager = (() => {
     const [x1, y1, x2, y2] = bbox;
     const isPerson = (type !== 'Hazard' && label !== 'Hazard');
     
-    // Clean, high-contrast tactical colors (solid emerald for survivor, solid crimson for hazard - NO NEON GLOW)
-    const color = isPerson ? '#10b981' : '#ef4444';
-    const tagBg = isPerson ? 'rgba(12, 28, 22, 0.95)' : 'rgba(38, 14, 18, 0.95)';
-    const tagColor = isPerson ? '#34d399' : '#f87171';
+    // Red bounding box for victim detection as requested
+    const color = isPerson ? '#ff0033' : '#ff9100'; // Pure tactical RED for victim
+    const tagBg = isPerson ? 'rgba(215, 12, 38, 0.95)' : 'rgba(220, 110, 0, 0.95)';
+    const tagColor = '#ffffff';
     const cornerLen = Math.min(28, Math.max(14, (x2 - x1) / 3));
 
     ctx.save();
-    // Zero neon blur or glow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
 
     // Thin clean target outline
-    ctx.strokeStyle = isPerson ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = isPerson ? 'rgba(255, 0, 51, 0.55)' : 'rgba(255, 145, 0, 0.55)';
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 
-    // Solid, sharp corner brackets
+    // Solid, sharp RED corner brackets (thickness 3)
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
 
     // Top-Left
     ctx.beginPath();
@@ -340,9 +355,10 @@ const CameraFeedManager = (() => {
     ctx.lineTo(x2, y2 - cornerLen);
     ctx.stroke();
 
-    // Center crosshair (clean lines)
+    // Center crosshair (RED)
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
+    ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
@@ -352,21 +368,21 @@ const CameraFeedManager = (() => {
     ctx.moveTo(cx, cy + 3);  ctx.lineTo(cx, cy + 9);
     ctx.stroke();
 
-    // Crisp Non-Neon Target Lock Badge displaying trained model name
-    const confVal = (typeof conf === 'number') ? (conf <= 1.0 ? (conf * 100).toFixed(1) : conf.toFixed(1)) : '94.2';
-    const tagText = isPerson ? `🎯 TARGET LOCKED: HUMAN [${currentMlModel}] | ACCURACY: ${confVal}%` : `⚠️ HAZARD IDENTIFIED | CONF: ${confVal}%`;
-    ctx.font = '600 12px "Inter", "Rajdhani", sans-serif';
+    // Bold RED Confidence Tag Banner
+    const confVal = (typeof conf === 'number') ? (conf <= 1.0 ? Math.round(conf * 100) : Math.round(conf)) : 94;
+    const tagText = isPerson ? `🎯 VICTIM DETECTED [OPENCV AI]: ${confVal}%` : `⚠️ HAZARD IDENTIFIED | CONF: ${confVal}%`;
+    ctx.font = '700 12px "Inter", "Rajdhani", sans-serif';
     const textWidth = ctx.measureText(tagText).width;
 
-    const tagY = Math.max(y1 - 18, 18);
+    const tagY = Math.max(y1 - 18, 36);
     ctx.fillStyle = tagBg;
-    ctx.fillRect(x1, tagY - 14, textWidth + 14, 20);
-    ctx.strokeStyle = color;
+    ctx.fillRect(x1, tagY - 14, textWidth + 16, 22);
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
-    ctx.strokeRect(x1, tagY - 14, textWidth + 14, 20);
+    ctx.strokeRect(x1, tagY - 14, textWidth + 16, 22);
 
     ctx.fillStyle = tagColor;
-    ctx.fillText(tagText, x1 + 7, tagY + 1);
+    ctx.fillText(tagText, x1 + 8, tagY + 2);
     ctx.restore();
   }
 
@@ -463,9 +479,87 @@ const CameraFeedManager = (() => {
     }
   }
 
+  let isDetectingFrame = false;
+  let lastInferenceCallTime = 0;
+
+  async function runLiveFrameDetection(sourceEl, srcW, srcH) {
+    if (isDetectingFrame) return;
+    const now = Date.now();
+    if (now - lastInferenceCallTime < 350) return;
+    lastInferenceCallTime = now;
+    isDetectingFrame = true;
+
+    try {
+      if (!ipWebcamTxCanvas) {
+        ipWebcamTxCanvas = document.createElement('canvas');
+        ipWebcamTxCtx = ipWebcamTxCanvas.getContext('2d');
+      }
+
+      // Optimize inference size (384px width) for fast real-time RT-DETR-L execution on CPU
+      const inferW = 384;
+      const inferH = Math.round(inferW * (srcH / srcW)) || 288;
+      ipWebcamTxCanvas.width = inferW;
+      ipWebcamTxCanvas.height = inferH;
+      ipWebcamTxCtx.drawImage(sourceEl, 0, 0, inferW, inferH);
+      const dataUrl = ipWebcamTxCanvas.toDataURL('image/jpeg', 0.70);
+
+      // Send to FastAPI ML model server (Port 8000 via server.js bridge)
+      const res = await fetch('/api/ml/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl, confidence: 0.25 })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.detections)) {
+          const scaleX = srcW / inferW;
+          const scaleY = srcH / inferH;
+
+          const mappedDetections = data.detections.map((d, idx) => ({
+            bbox: [
+              Math.round(d.bbox[0] * scaleX),
+              Math.round(d.bbox[1] * scaleY),
+              Math.round(d.bbox[2] * scaleX),
+              Math.round(d.bbox[3] * scaleY)
+            ],
+            label: d.label,
+            conf: d.confidence,
+            type: d.is_victim ? 'Person' : d.label,
+            model: data.model || currentMlModel,
+            id: d.id || `DET-${idx + 1}`,
+            timestamp: Date.now()
+          }));
+
+          liveOverlayDetections = mappedDetections;
+
+          // Update HUD Target Lock status
+          const targetLockLabel = document.getElementById('targetLockLabel');
+          const victims = mappedDetections.filter(d => d.type === 'Person');
+          if (victims.length > 0) {
+            if (targetLockLabel) {
+              targetLockLabel.textContent = `TARGET LOCKED: ${victims[0].conf}% CONFIDENCE`;
+              targetLockLabel.className = 'target-lock-label connected';
+            }
+          } else if (mappedDetections.length > 0) {
+            if (targetLockLabel) {
+              targetLockLabel.textContent = `TRACKING: ${mappedDetections[0].label.toUpperCase()} (${mappedDetections[0].conf}%)`;
+              targetLockLabel.className = 'target-lock-label';
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Ignore network errors during streaming
+    } finally {
+      isDetectingFrame = false;
+    }
+  }
+
   function startIpWebcamStream(directTargetUrl) {
     isIpWebcamActive = true;
     ipWebcamLoopActive = true;
+    setDroneConnectedState(true);
 
     // Use server proxy stream to prevent CORS/private network blocking
     const streamProxyUrl = `/api/ipwebcam/stream?t=${Date.now()}`;
@@ -508,6 +602,13 @@ const CameraFeedManager = (() => {
             rgbCanvas.height = h;
           }
           rgbCtx.drawImage(ipWebcamImage, 0, 0, w, h);
+
+          // Draw live tactical AI reticles on IP Webcam frame
+          const now = Date.now();
+          liveOverlayDetections = liveOverlayDetections.filter(d => (now - d.timestamp) < 3500);
+          for (const det of liveOverlayDetections) {
+            drawTacticalReticleOverlay(rgbCtx, det.bbox, det.label, det.conf, det.type, w, h);
+          }
         }
 
         // Draw real-time Thermal Canvas
@@ -539,35 +640,11 @@ const CameraFeedManager = (() => {
           thermalCtx.drawImage(offscreenCanvas, 0, 0, w, h);
         }
 
-        // Transmit mobile camera frame to Python YOLO AI Engine (~11 FPS)
+        // Trigger real-time RT-DETR-L AI human survivor detection loop on camera stream
         const now = Date.now();
-        if (now - lastIpWebcamTxTime >= 90) {
+        if (now - lastIpWebcamTxTime >= 350 && !isDetectingFrame) {
           lastIpWebcamTxTime = now;
-          if (!ipWebcamTxCanvas) {
-            ipWebcamTxCanvas = document.createElement('canvas');
-            ipWebcamTxCtx = ipWebcamTxCanvas.getContext('2d');
-          }
-          ipWebcamTxCanvas.width = 640;
-          ipWebcamTxCanvas.height = Math.round(640 * (h / w)) || 360;
-          ipWebcamTxCtx.drawImage(ipWebcamImage, 0, 0, ipWebcamTxCanvas.width, ipWebcamTxCanvas.height);
-          const dataUrl = ipWebcamTxCanvas.toDataURL('image/jpeg', 0.65);
-
-          const payload = {
-            type: 'video_frame',
-            data: dataUrl,
-            source: 'mobile_ipwebcam',
-            timestamp: now
-          };
-
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(payload));
-          } else {
-            fetch('/api/drone/frame', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            }).catch(() => {});
-          }
+          runLiveFrameDetection(ipWebcamImage, w, h);
         }
       }
 
@@ -580,6 +657,8 @@ const CameraFeedManager = (() => {
   function stopIpWebcamStream() {
     isIpWebcamActive = false;
     ipWebcamLoopActive = false;
+    setDroneConnectedState(false);
+    liveOverlayDetections = [];
     if (ipWebcamImage) {
       ipWebcamImage.src = '';
       ipWebcamImage = null;
@@ -711,12 +790,19 @@ const CameraFeedManager = (() => {
         if (video.videoWidth) {
           const w = video.videoWidth;
           const h = video.videoHeight;
-          if (rgbCanvas) {
+          if (rgbCanvas && rgbCtx) {
             rgbImage.style.display = 'none';
             rgbCanvas.style.display = 'block';
             rgbCanvas.width = w;
             rgbCanvas.height = h;
             rgbCtx.drawImage(video, 0, 0, w, h);
+
+            // Draw live tactical AI reticles on PC webcam frame
+            const now = Date.now();
+            liveOverlayDetections = liveOverlayDetections.filter(d => (now - d.timestamp) < 3500);
+            for (const det of liveOverlayDetections) {
+              drawTacticalReticleOverlay(rgbCtx, det.bbox, det.label, det.conf, det.type, w, h);
+            }
           }
 
           // Generate real-time thermal
@@ -742,36 +828,15 @@ const CameraFeedManager = (() => {
             thermalCtx.drawImage(offscreenCanvas, 0, 0, w, h);
           }
 
-          // Transmit frame to Python Edge AI Engine for YOLO detection (~10 FPS)
+          // Trigger live RT-DETR-L AI human survivor detection loop on PC webcam
           const now = Date.now();
-          if (now - lastWebcamTxTime >= 100) {
+          if (now - lastWebcamTxTime >= 350 && !isDetectingFrame) {
             lastWebcamTxTime = now;
-            txCanvas.width = 640;
-            txCanvas.height = Math.round(640 * (h / w)) || 360;
-            txCtx.drawImage(video, 0, 0, txCanvas.width, txCanvas.height);
-            const dataUrl = txCanvas.toDataURL('image/jpeg', 0.65);
-
-            const payload = {
-              type: 'video_frame',
-              data: dataUrl,
-              source: 'pc_webcam',
-              timestamp: now
-            };
-
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify(payload));
-            } else {
-              fetch('/api/drone/frame', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              }).catch(() => {});
-            }
+            runLiveFrameDetection(video, w, h);
           }
         }
         requestAnimationFrame(captureLoop);
       }
-      requestAnimationFrame(captureLoop);
 
       if (window.showToast) {
         window.showToast('Local PC camera active and transmitting to YOLO11n AI!');
@@ -835,7 +900,7 @@ const CameraFeedManager = (() => {
             thermalCtx.drawImage(offscreenCanvas, 0, 0, w, h);
           }
 
-          // Send to Python YOLO Edge AI
+          // Send to FastAPI ML Engine (RT-DETR-L / YOLO)
           const txCanvas = document.createElement('canvas');
           txCanvas.width = 640;
           txCanvas.height = Math.round(640 * (h / w)) || 360;
@@ -850,25 +915,185 @@ const CameraFeedManager = (() => {
             timestamp: Date.now()
           };
 
+          // 1. Broadcast frame to WebSocket
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(payload));
-          } else {
-            fetch('/api/drone/frame', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            }).catch(() => {});
           }
 
+          // 2. Perform direct FastAPI ML Model Inference
           if (window.showToast) {
-            window.showToast('Test image sent to YOLO11n! Detecting human targets...');
+            window.showToast(`Scanning photo with FastAPI ML (${currentMlModel})...`);
           }
+
+          fetch('/api/ml/detect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl, confidence: 0.25 })
+          })
+            .then(res => res.json())
+            .then(result => {
+              if (result && result.detections && result.detections.length > 0) {
+                const scaleX = w / txCanvas.width;
+                const scaleY = h / txCanvas.height;
+                liveOverlayDetections = result.detections.map((d, idx) => ({
+                  bbox: [
+                    Math.round(d.bbox[0] * scaleX),
+                    Math.round(d.bbox[1] * scaleY),
+                    Math.round(d.bbox[2] * scaleX),
+                    Math.round(d.bbox[3] * scaleY)
+                  ],
+                  label: d.label,
+                  conf: d.confidence,
+                  type: d.is_victim ? 'Person' : d.label,
+                  model: result.model || currentMlModel,
+                  id: `TARGET-${idx + 1}`,
+                  timestamp: Date.now()
+                }));
+
+                // Immediately redraw photo and tactical reticle overlays on canvas
+                if (rgbCanvas && rgbCtx) {
+                  rgbCtx.drawImage(img, 0, 0, w, h);
+                  for (const det of liveOverlayDetections) {
+                    drawTacticalReticleOverlay(rgbCtx, det.bbox, det.label, det.conf, det.type, w, h);
+                  }
+                }
+
+                const victimCount = result.detections.filter(d => d.is_victim).length;
+                if (window.showToast) {
+                  window.showToast(`🎯 RT-DETR-L: ${result.detections.length} target(s) detected (${victimCount} survivor(s))!`);
+                }
+              } else {
+                liveOverlayDetections = [];
+                if (window.showToast) {
+                  window.showToast('RT-DETR-L: Scan completed. No targets detected.');
+                }
+              }
+            })
+            .catch(err => {
+              console.warn('[CameraFeed] FastAPI detection error:', err);
+            });
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     });
   }
+
+  // 5b. FastAPI ML Model Controls & State Monitor
+  async function initFastApiMlControls() {
+    const mlStatusDot = document.getElementById('mlStatusDot');
+    const mlModelSelector = document.getElementById('mlModelSelector');
+    const btnReloadMl = document.getElementById('btnReloadMlModel');
+
+    async function checkMlStatus() {
+      try {
+        const res = await fetch('/api/ml/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.online) {
+            if (mlStatusDot) {
+              mlStatusDot.className = 'ml-status-dot online';
+              mlStatusDot.title = `FastAPI Online | Model: ${data.model_name} (${data.model_type}) | Device: ${data.device}`;
+            }
+            currentMlModel = data.model_name || 'rtdetr-l.pt';
+            return true;
+          }
+        }
+        if (mlStatusDot) {
+          mlStatusDot.className = 'ml-status-dot offline';
+          mlStatusDot.title = 'FastAPI ML Server Offline (Check Port 8000)';
+        }
+        return false;
+      } catch (e) {
+        if (mlStatusDot) {
+          mlStatusDot.className = 'ml-status-dot offline';
+          mlStatusDot.title = 'FastAPI ML Server Offline';
+        }
+        return false;
+      }
+    }
+
+    async function loadAvailableModels() {
+      try {
+        const res = await fetch('/api/ml/models');
+        if (res.ok) {
+          const data = await res.json();
+          if (mlModelSelector && Array.isArray(data.available_models)) {
+            mlModelSelector.innerHTML = '';
+            data.available_models.forEach(m => {
+              const mName = m.name || m.filename;
+              const opt = document.createElement('option');
+              opt.value = mName;
+              opt.textContent = `${mName}${m.size_mb ? ' (' + m.size_mb + ' MB)' : ''}`;
+              if (mName === data.active_model) opt.selected = true;
+              mlModelSelector.appendChild(opt);
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[CameraFeed] Could not load available ML models:', err);
+      }
+    }
+
+    if (mlModelSelector) {
+      mlModelSelector.addEventListener('change', async (e) => {
+        const selected = e.target.value;
+        if (mlStatusDot) mlStatusDot.className = 'ml-status-dot loading';
+        if (window.showToast) window.showToast(`Loading ML model ${selected} via FastAPI...`);
+        try {
+          const res = await fetch('/api/ml/load-model', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model_name: selected })
+          });
+          const result = await res.json();
+          if (res.ok && result.success) {
+            currentMlModel = result.model_name;
+            if (mlStatusDot) {
+              mlStatusDot.className = 'ml-status-dot online';
+              mlStatusDot.title = `Model Loaded: ${result.model_name} (${result.model_type}) on ${result.device}`;
+            }
+            if (window.showToast) {
+              window.showToast(`✅ Model ${result.model_name} loaded (${result.classes_count} classes)`);
+            }
+          } else {
+            if (window.showToast) window.showToast(`❌ Failed to load model: ${result.detail || 'Error'}`);
+            await checkMlStatus();
+          }
+        } catch (err) {
+          if (window.showToast) window.showToast(`❌ ML Load error: ${err.message}`);
+          await checkMlStatus();
+        }
+      });
+    }
+
+    if (btnReloadMl) {
+      btnReloadMl.addEventListener('click', async () => {
+        const active = mlModelSelector ? mlModelSelector.value : 'rtdetr-l.pt';
+        if (mlStatusDot) mlStatusDot.className = 'ml-status-dot loading';
+        if (window.showToast) window.showToast(`Reloading ${active}...`);
+        try {
+          const res = await fetch('/api/ml/load-model', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model_name: active })
+          });
+          const result = await res.json();
+          if (res.ok) {
+            await checkMlStatus();
+            await loadAvailableModels();
+            if (window.showToast) window.showToast(`✅ ${active} reloaded successfully!`);
+          }
+        } catch (err) {
+          await checkMlStatus();
+        }
+      });
+    }
+
+    await checkMlStatus();
+    await loadAvailableModels();
+  }
+
 
   // 5. Standard Feed UI Controls
   function setupEventListeners() {
