@@ -1,200 +1,110 @@
-# AEROSIGHT 🛸
-### AI-Powered Autonomous Search and Rescue Drone System
+# A.S.A.R.D – Autonomous Search and Rescue Drone System
+
+**AI-Powered Autonomous Disaster Response and Survivor Detection Platform**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://python.org)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![AI Architecture](https://img.shields.io/badge/AI%20Model-RT--DETR--L%20%7C%20YOLOv8-FF6F00?logo=pytorch&logoColor=white)](models/)
-[![Hardware](https://img.shields.io/badge/Hardware-ESP32%20%7C%20MPU6050%20%7C%20GPS-E7352C?logo=espressif&logoColor=white)](hardware/)
-[![Protocols](https://img.shields.io/badge/Protocols-MQTT%20%7C%20WebSocket%20%7C%20REST-005C8A)](web%20dashboard/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)](https://python.org)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933)](https://nodejs.org)
+[![AI Model](https://img.shields.io/badge/AI-RT--DETR%20%7C%20YOLOv8-orange)](models/)
+[![Hardware](https://img.shields.io/badge/Hardware-ESP32%20%7C%20MPU6050-red)](hardware/)
 
-> **Mission Motto:** *"Faster Detection | Safer Rescue | Stronger Tomorrow"*
+> **Mission Motto:** *Faster Detection | Safer Rescue | Stronger Tomorrow*
 
-**AEROSIGHT** is a next-generation disaster response and autonomous aerial search-and-rescue platform engineered for disaster management agencies (such as NDRF, SDRF, and civil defense forces). It combines **deep learning vision transformers (RT-DETR-L / YOLO)**, an **ESP32 IoT sensor telemetry node**, and a **Three.js-powered 3D Tactical Ground Control Station** to locate survivors and detect secondary hazards in collapsed structures, flood zones, and earthquake rubble.
+## About the Project
 
----
+**A.S.A.R.D (Autonomous Search and Rescue Drone System)** is an AI-powered disaster response platform designed to assist search-and-rescue teams in locating survivors and identifying potential hazards in disaster-affected areas, including floods, earthquakes, landslides, and structural collapses.
 
-## 📑 Table of Contents
+The system combines deep-learning-based object detection using RT-DETR and YOLO models, an ESP32-based IoT sensor telemetry node, and a web-based tactical Ground Control Station. It processes camera feeds to identify potential survivors, integrates sensor telemetry for situational awareness, and presents detection results and location information through an interactive dashboard.
 
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Project Directory Structure](#-project-directory-structure)
-- [Hardware & Sensor Node Specification](#-hardware--sensor-node-specification)
-- [Prerequisites & Requirements](#-prerequisites--requirements)
-- [Quick Start Guide](#-quick-start-guide)
-  - [Option A: One-Click Startup (Windows)](#option-a-one-click-startup-windows)
-  - [Option B: Manual Step-by-Step Launch](#option-b-manual-step-by-step-launch)
-- [Smartphone Drone Camera Mode](#-smartphone-drone-camera-mode)
-- [Edge AI & Detection Pipeline](#-edge-ai--detection-pipeline)
-- [REST & WebSocket API Reference](#-rest--websocket-api-reference)
-- [Hardware Simulation (Wokwi)](#-hardware-simulation-wokwi)
-- [Configuration Reference](#-configuration-reference)
-- [License & Acknowledgments](#-license--acknowledgments)
+The platform is designed to support offline data storage and synchronization when connectivity becomes available, helping rescue teams maintain access to critical information in areas with unreliable network coverage.
 
----
+## Key Features
 
-## 🌟 Key Features
+### 1. AI-Based Survivor and Hazard Detection
 
-### 1. 🎯 Real-Time Aerial AI Detection
-- **RT-DETR-L Vision Transformer**: State-of-the-art real-time detection transformer trained to detect trapped victims and survivors in complex rubble, foliage, and low-contrast debris.
-- **Landslide & Secondary Hazard Classification**: Detects rockfalls, structural collapses, and fire/gas hazards.
-- **Explainable Priority Scoring Engine**: Ranks discoveries as `CRITICAL`, `HIGH`, or `MEDIUM` based on model confidence, multi-frame persistence, proximity, and obstacle telemetry.
-- **Target Georeferencing**: Combines camera pixel bounding boxes with drone altitude, heading, and GPS telemetry to pinpoint real-world rescue GPS coordinates.
+- Uses RT-DETR and YOLO-based object detection for real-time human detection from camera feeds.
+- Supports the identification of potential survivors in challenging disaster environments.
+- Provides a framework for detecting disaster-related hazards such as landslides, falling rocks, fire, and structural damage when suitable detection models are available.
+- Applies confidence thresholds and multi-frame confirmation to help reduce false-positive detections.
+- Records detected targets and their associated information for rescue assessment.
 
-### 2. 🛰️ 3D Tactical Ground Control Station (GCS)
-- **Interactive 3D Digital Twin Map**: Built with **Three.js** and high-resolution satellite tiles (Google Satellite with automatic ArcGIS fallback) with altitude rendering, waypoint paths, and dynamic drone attitude indicators.
-- **2D Tactical Map View**: OpenStreetMap / Leaflet overview for tactical grid mapping and casualty zone distribution.
-- **Autonomous Mission Planner**: Design Lawnmower / Grid survey routes, assign flight altitudes, and dispatch automated scanning patterns.
-- **Flight HUD Overlay**: Displays artificial horizon, compass heading tape, GPS coordinates, signal quality, and battery reserve in a tactical dark theme.
+### 2. Tactical Ground Control Station
 
-### 3. 📱 Turn Any Smartphone into a Drone Recon Camera
-- **Mobile Camera Transmitter (`/mobile`)**: Mount any smartphone onto a drone frame to stream high-definition video directly to the AI engine.
-- **Tactical Mobile HUD**: Real-time compass heading, FPS tracker, flashlight toggle, touch focus, and live detection overlays.
-- **Dual Connection Modes**: WebSocket direct camera stream over secure HTTPS (Port 3443) or IP Webcam app integration.
+- Provides an interactive 3D visualization using Three.js.
+- Supports a 2D map interface using Leaflet and OpenStreetMap.
+- Displays drone telemetry, detection records, GPS information, and rescue-related alerts.
+- Supports waypoint planning and grid-based survey route configuration.
+- Provides a centralized interface for monitoring drone status and coordinating rescue activities.
 
-### 4. 📡 Avionics & IoT Sensor Telemetry
-- **ESP32 Edge Node**: Gathers orientation from **MPU-6050 (6-axis IMU)**, obstacle clearance from **HC-SR04 (Ultrasonic sensor)**, and satellite coordinates from **NEO-6M GPS**.
-- **MQTT Telemetry Stream**: Publishes JSON avionics packets at 2 Hz over MQTT (HiveMQ or local Mosquitto broker).
-- **Proximity Collision Avoidance**: Hardware-level proximity warning (< 1.5 m) with status indicators and alerts.
+### 3. Smartphone-Based Camera Integration
 
-### 5. 💾 Offline-First Resilience & Resilient Synchronization
-- **Air-Gapped Operation**: Both the ESP32 hardware and the Python edge system can operate completely isolated from the internet.
-- **In-Memory & Local Database Caching**: Circular ring buffer on hardware and local JSON/SQLite storage (`rescue_drone_db.json`) on the edge companion computer.
-- **Automatic Sync Manager**: Queues victim sightings and hazard logs when comms are degraded and flushes them in chronological order once the Ground Station link is restored.
+- Enables a smartphone camera to act as a video source for reconnaissance and AI detection.
+- Supports video streaming through WebSocket connections or compatible IP Webcam applications.
+- Displays camera feeds and detection overlays through the dashboard.
+- Offers a cost-effective approach to testing the computer vision pipeline before integrating a dedicated onboard camera.
 
-### 6. 🚨 Rescue Team Coordination & Export
-- **Live Rescue Log**: Dispatch rescue units (*Team Alpha*, *Team Bravo*, *Team Delta*) with estimated time of arrival (ETA) calculation.
-- **1-Click Field Export**: Download complete rescue targets as a formatted CSV file (`aerosight_rescue_coordinates_log.csv`) ready for field distribution.
+### 4. IoT Sensor Telemetry
 
----
+The ESP32-based sensor node collects and transmits telemetry from connected sensors.
 
-## 🏗 System Architecture
+- **MPU-6050 IMU:** Measures acceleration and angular velocity to support orientation monitoring.
+- **HC-SR04 Ultrasonic Sensor:** Measures nearby object distance for basic proximity warnings.
+- **NEO-6M GPS:** Provides geographic coordinates when connected and receiving a valid satellite fix.
+- **MQTT Communication:** Transmits structured sensor data to the monitoring system.
+- **Obstacle Alerts:** Generates proximity warnings when the measured distance falls below a configured threshold.
 
-```mermaid
-flowchart TB
-    subgraph SENSORS ["🚁 Aerial Platform / Drone Hardware"]
-        ESP32["ESP32 Microcontroller"]
-        IMU["MPU-6050 (6-Axis IMU)"] -->|I2C| ESP32
-        SONAR["HC-SR04 (Ultrasonic)"] -->|GPIO Pulse| ESP32
-        GPS["NEO-6M GPS"] -->|UART 9600| ESP32
-        CAM["Smartphone / Onboard Camera"]
-    end
+### 5. Offline Operation and Data Synchronization
 
-    subgraph PROTOCOLS ["🌐 Communication Bus"]
-        MQTT[("MQTT Broker\nHiveMQ / Mosquitto")]
-        WS["WebSocket Stream\n(Video & Telemetry)"]
-    end
+- Supports local storage of detection records and sensor information.
+- Queues data when the dashboard or communication link is temporarily unavailable.
+- Synchronizes queued records when the required connection is restored.
+- Supports local processing through a Python-based edge system, depending on the available hardware and installed model.
+- Helps preserve important rescue information during network interruptions.
 
-    ESP32 -->|Publish Telemetry 2Hz| MQTT
-    CAM -->|Low-Latency MJPEG / WS Frames| WS
+### 6. Rescue Coordination and Data Export
 
-    subgraph EDGE_AI ["🧠 Companion Computer / Python Edge System"]
-        DETECTOR["AI Detector\n(RT-DETR-L / YOLO)"]
-        FUSION["Sensor Fusion & Priority Engine"]
-        DB[("Offline Storage\nrescue_drone_db.json")]
-        SYNC["Sync Engine (Auto-Flush)"]
+- Maintains a log of detected survivors and potential hazards.
+- Supports rescue team assignment and status tracking through the dashboard.
+- Provides CSV export for sharing recorded rescue target information.
+- Presents detection confidence, available coordinates, and priority information to support human decision-making.
 
-        DETECTOR --> FUSION
-        FUSION --> DB
-        DB --> SYNC
-    end
+## System Architecture
 
-    WS -->|Raw Frames| DETECTOR
-    MQTT -->|Telemetry Ingest| FUSION
+A.S.A.R.D consists of four primary layers:
 
-    subgraph GCS ["🖥️ Tactical Ground Control Station (Node.js)"]
-        SERVER["Express + WebSocket Server\n(:3000 / :3443 HTTPS)"]
-        DASHBOARD["Tactical 3D Dashboard\n(Three.js + Leaflet)"]
-        MOBILE_VIEW["Mobile HUD Transmitter\n(/mobile)"]
-    end
+1. **Sensing Layer:** The ESP32, MPU-6050, ultrasonic sensor, GPS module, and camera provide sensor readings, positioning information, and visual data.
+2. **Communication Layer:** MQTT carries sensor telemetry, while WebSocket connections support real-time video and dashboard communication.
+3. **AI and Processing Layer:** The Python-based edge system processes video frames, performs object detection, combines available sensor information, and stores detection records locally.
+4. **Ground Control Layer:** The Node.js web server and dashboard display telemetry, detection results, maps, alerts, and rescue coordination information.
 
-    SYNC -->|REST / WS Upsert| SERVER
-    WS <--> SERVER
-    SERVER <--> DASHBOARD
-    SERVER <--> MOBILE_VIEW
-```
+The overall workflow is:
 
----
+`Camera and Sensors → Communication → AI Detection and Sensor Processing → Local Storage → Ground Control Dashboard → Rescue Team Assessment`
 
-## 📁 Project Directory Structure
+## Hardware and Sensor Specifications
 
-```text
-Application/
-├── hardware/                      # Embedded IoT Avionics Node (ESP32)
-│   ├── diagram.json               # Wokwi simulation circuit layout & wiring
-│   ├── esp32_firmware.ino         # ESP32 C++ firmware with circular buffer & MQTT
-│   ├── libraries.txt              # Arduino library dependencies for Wokwi
-│   ├── README.md                  # Hardware wiring and pinout documentation
-│   └── wokwi.toml                 # Wokwi simulation project definition
-├── models/                        # Pretrained & Fine-Tuned AI Weights
-│   └── rtdetr-l.pt                # Trained RT-DETR-L human detection model (66.5 MB)
-├── rescue_drone/                  # Python Edge System & AI Inference Engine
-│   ├── ai/
-│   │   └── yolo_detector.py       # RT-DETR-L & YOLO inference and bounding-box generator
-│   ├── api/
-│   │   └── backend.py             # FastAPI diagnostic & simulated discovery endpoints
-│   ├── communication/
-│   │   ├── mqtt_client.py         # Paho-MQTT subscriber and publisher
-│   │   └── websocket_client.py    # Bi-directional WebSocket bridge to GCS
-│   ├── config/
-│   │   └── config.py              # System settings & environment variable parser
-│   ├── database/
-│   │   └── database.py            # Local offline JSON/SQLite database manager
-│   ├── detection/
-│   │   └── victim_manager.py      # Georeferencing, priority scoring & multi-frame confirmation
-│   ├── offline/
-│   │   └── sync_manager.py        # Offline buffering and retry synchronization worker
-│   ├── sensors/
-│   │   ├── gps.py                 # GPS coordinate tracking & NMEA parsing
-│   │   ├── imu.py                 # IMU attitude calculation (pitch, roll, yaw)
-│   │   └── obstacle.py            # Ultrasonic obstacle danger distance evaluator
-│   ├── main.py                    # Main autonomous edge system entry point
-│   ├── requirements.txt           # Python package requirements
-│   ├── rescue_drone.service       # Linux systemd daemon service configuration
-│   └── test_pipeline.py           # Comprehensive integration & benchmark test suite
-├── web dashboard/                 # Tactical Command Ground Control Station (GCS)
-│   ├── public/
-│   │   ├── assets/                # Tactical icons, textures, and 3D assets
-│   │   ├── css/                   # Tactical dark theme stylesheets
-│   │   ├── js/
-│   │   │   ├── app.js             # Root application loader & module orchestrator
-│   │   │   ├── camera-feed.js     # Low-latency video canvas & HUD drawing
-│   │   │   ├── detections.js      # AI detections table, filtering & alerts
-│   │   │   ├── map3d.js           # Three.js 3D terrain & satellite drone visualizer
-│   │   │   ├── map2d.js           # 2D Leaflet tactical map overlay
-│   │   │   ├── mission.js         # Waypoint path planning & autopilot triggers
-│   │   │   ├── mobile.js          # Smartphone camera capture & transmitter logic
-│   │   │   ├── rescue-log.js      # Search & rescue dispatch coordination
-│   │   │   └── telemetry.js       # Real-time avionics telemetry gauges
-│   │   ├── index.html             # Main 3D Tactical Command Dashboard SPA
-│   │   └── mobile.html            # Dedicated smartphone camera transmitter page
-│   ├── ssl/                       # SSL certificate & key for mobile HTTPS access
-│   ├── package.json               # GCS Node.js dependencies
-│   └── server.js                  # Express backend, WebSocket broker & proxy
-├── package.json                   # Root package script runner
-├── run_system.bat                 # Windows one-click automated startup script
-└── server.js                      # Root entrypoint proxy to web dashboard
-```
+The sensor telemetry node is designed around an ESP32 development board.
 
----
+| Component | Pin / Signal | ESP32 GPIO | Purpose |
+|---|---|---|---|
+| MPU-6050 | SDA | GPIO 21 | I2C data |
+| MPU-6050 | SCL | GPIO 22 | I2C clock |
+| MPU-6050 | VCC / GND | 3.3V / GND | Sensor power |
+| HC-SR04 | TRIG | GPIO 5 | Trigger pulse |
+| HC-SR04 | ECHO | GPIO 18 | Echo input |
+| HC-SR04 | VCC / GND | 5V / GND | Sensor power |
+| Alert LED | Anode (+) | GPIO 4 through 220 Ω resistor | Proximity warning |
+| Status LED | Onboard | GPIO 2 | Status indication |
+| NEO-6M GPS | RX / TX | GPIO 17 / GPIO 16 | UART communication |
 
-## ⚡ Hardware & Sensor Node Specification
+**Hardware note:** The HC-SR04 ECHO signal is typically 5V. Since ESP32 GPIO pins are not 5V tolerant, use a suitable voltage divider or logic-level shifter before connecting ECHO to GPIO 18. Confirm the actual wiring and sensor compatibility before powering the circuit.
 
-The telemetry node runs on an **ESP32 Dev Module** and collects avionics telemetry to publish over MQTT.
+## Telemetry Data Format
 
-| Component | Pin / Signal | ESP32 GPIO | Description |
-|-----------|--------------|------------|-------------|
-| **MPU-6050** | VCC / GND | 3V3 / GND | 3.3V Power & Common Ground |
-| | SDA | GPIO 21 | I2C Data Line |
-| | SCL | GPIO 22 | I2C Clock Line |
-| **HC-SR04** | VCC / GND | 5V / GND | Ultrasonic Power & Ground |
-| | TRIG | GPIO 5 | 10 µs Ultrasonic Pulse Trigger |
-| | ECHO | GPIO 18 | Ultrasonic Return Echo Input |
-| **Alert LED** | Anode (+) | GPIO 4 (220Ω) | Lights up when obstacle < 1.5 m |
-| **Status LED**| Onboard | GPIO 2 | Blinks on each telemetry broadcast |
-| **NEO-6M GPS**| RX / TX | GPIO 17 / 16 | Serial UART Data (9600 baud) |
+The ESP32 can publish structured telemetry using JSON over the MQTT topic `rescue/drone/01/telemetry`.
 
-### Telemetry Packet Schema (MQTT Topic: `rescue/drone/01/telemetry`)
+Example:
+
 ```json
 {
   "drone_id": "DRONE_01",
@@ -216,193 +126,198 @@ The telemetry node runs on an **ESP32 Dev Module** and collects avionics telemet
 }
 ```
 
----
+The values above are illustrative sample data, not live measurements. Actual fields depend on the connected sensors and telemetry implementation.
 
-## 📦 Prerequisites & Requirements
+## Prerequisites and Requirements
 
-1. **Node.js**: v18.0.0 or higher ([Download Node.js](https://nodejs.org))
-2. **Python**: v3.10 to v3.14 ([Download Python](https://www.python.org))
-3. **PyTorch**: Compatible with your CPU or NVIDIA CUDA GPU.
-4. **Arduino IDE / Wokwi**: For ESP32 firmware deployment or simulation.
+Before running the software, ensure that the following are available:
 
----
+1. **Python:** Version 3.10 or a compatible version supported by the project's dependencies.
+2. **Node.js:** Version 18 or later.
+3. **PyTorch:** A version compatible with the selected Python environment and CPU or CUDA-enabled GPU.
+4. **Arduino IDE or Wokwi:** For ESP32 firmware development and hardware simulation.
+5. **MQTT Broker:** HiveMQ or a locally configured Mosquitto broker.
+6. **AI Model Weights:** The trained model files required for inference.
+7. **Camera Source:** A compatible webcam, smartphone camera stream, or onboard camera.
+8. **Network Connection:** Required for communication between separate devices; local processing and storage can continue offline where configured.
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
-### Option A: One-Click Startup (Windows)
+### Option A: One-Click Startup on Windows
 
-Simply double-click:
+Run the following file from the project directory:
+
 ```bat
 run_system.bat
 ```
-This automated launcher will:
-1. Start the Command Web Dashboard (HTTP port `3000` & HTTPS port `3443`).
-2. Verify dashboard endpoint connectivity.
-3. Launch the Python Edge AI Engine with the trained RT-DETR-L model.
 
----
+The launcher is intended to start the web dashboard, check the dashboard connection, and launch the Python AI processing system.
 
-### Option B: Manual Step-by-Step Launch
+Ensure the required dependencies, configuration files, and model weights are installed before running it.
 
-#### Step 1: Install & Start the Tactical Ground Control Station
+### Option B: Manual Startup
+
+**Step 1: Start the Ground Control Dashboard**
+
+Open a terminal and execute:
+
 ```bash
-# Navigate to the dashboard directory
 cd "web dashboard"
-
-# Install Node.js dependencies
 npm install
-
-# Start the command server
 npm start
 ```
-*The Command Dashboard is now live at: [http://localhost:3000](http://localhost:3000)*
 
-#### Step 2: Install & Start the Python Edge AI Engine
+Open the dashboard at:
+
+`http://localhost:3000`
+
+**Step 2: Start the Python AI System**
+
+Open a second terminal and execute:
+
 ```bash
-# Open a second terminal and navigate to the rescue drone directory
 cd rescue_drone
-
-# Install Python requirements
 pip install -r requirements.txt
-
-# Run the autonomous drone edge system
 python main.py
 ```
 
-#### Step 3: Access the Applications
-- **3D Ground Control Dashboard**: [http://localhost:3000](http://localhost:3000)
-- **Mobile Camera Recon Portal**: [https://localhost:3443/mobile](https://localhost:3443/mobile) *(or via local network IP)*
-- **Edge API Health & Diagnostics**: [http://localhost:8000/health](http://localhost:8000/health) *(when running FastAPI)*
+The Python system loads the configured AI model, processes incoming video frames, receives available telemetry, and manages detection records according to the implemented pipeline.
 
----
+**Step 3: Access the Applications**
 
-## 📱 Smartphone Drone Camera Mode
+- **Ground Control Dashboard:** `http://localhost:3000`
+- **Mobile Camera Portal:** `https://localhost:3443/mobile`
+- **Edge API Health Check:** `http://localhost:8000/health` when the FastAPI service is running.
 
-AEROSIGHT features a zero-cost drone camera reconnaissance mode using any smartphone.
+The actual availability of each endpoint depends on the services enabled in the project configuration.
 
-1. Ensure your smartphone and laptop/ground station are on the **same Wi-Fi network / mobile hotspot**.
-2. Open the Command Dashboard ([http://localhost:3000](http://localhost:3000)) and click the **Connect Phone Camera** button, or check the terminal output for the local LAN URL.
-3. Open your mobile browser and navigate to:
-   ```text
-   https://<YOUR_COMPUTER_LOCAL_IP>:3443/mobile
-   ```
-4. Accept the local SSL certificate prompt, grant camera access, and tap **"Start Drone Recon Feed"**.
-5. The smartphone will immediately stream 20+ FPS video to the Python RT-DETR model for live human and hazard detection, with real-time HUD telemetry rendered on screen.
+## Smartphone Drone Camera Mode
 
-> **Alternative (IP Webcam App):** Install the *IP Webcam* app on Android, tap "Start Server", and paste the stream URL (e.g., `http://192.168.1.15:8080`) into the dashboard under **Live Feed -> Connect IP Camera**.
+A.S.A.R.D supports smartphone-based camera streaming for testing and reconnaissance.
 
----
+1. Connect the smartphone and computer to the same Wi-Fi network or mobile hotspot.
+2. Start the Ground Control Dashboard.
+3. Open the mobile camera portal using the computer's local network IP address and configured HTTPS port.
+4. Grant camera permissions and start the video stream.
+5. Connect the stream to the configured AI inference pipeline.
+6. Monitor the camera feed and available detection results through the dashboard.
 
-## 🧠 Edge AI & Detection Pipeline
+An Android IP Webcam application can also be used if its stream format is supported by the application.
 
-AEROSIGHT incorporates an intelligent multi-stage detection pipeline:
+This mode provides a low-cost way to test the vision pipeline. Actual drone-mounted operation requires suitable mounting, power, communications, and flight-system integration.
 
-```
-Video Stream (Mobile / Drone Cam)
-               │
-               ▼
-   [ RT-DETR-L Transformer ] ──> Person & Victim BBoxes
-               │
-   [ Landslide Hazard Model ] ──> Rockfall & Collapse BBoxes
-               │
-               ▼
-   [ Sensor Fusion Engine ]
-      ├── Drone Altitude & Camera FOV ──> Pixel-to-GPS Projection
-      ├── Ultrasonic Proximity Telemetry ──> Hazard Distance Confirmation
-      └── Multi-Frame Persistence Filter ──> False-Positive Suppression
-               │
-               ▼
-   [ Explainable Priority Engine ]
-      ├── CRITICAL: Confirmed Human + High Proximity / Hazard (<1.5m)
-      ├── HIGH: Sustained Detection (>70% confidence across multiple frames)
-      └── MEDIUM: Single-frame preliminary visual match
-               │
-               ▼
-   [ Local Offline SQLite/JSON ] ──> [ Ground Station Auto-Sync Engine ]
-```
+## Edge AI and Detection Pipeline
 
----
+The A.S.A.R.D detection pipeline follows these stages:
 
-## 🔌 REST & WebSocket API Reference
+1. **Video Acquisition:** Receives frames from a smartphone, webcam, or compatible onboard camera.
+2. **AI Inference:** Uses the configured RT-DETR or YOLO model to identify objects represented in its training classes.
+3. **Detection Validation:** Applies confidence thresholds and, where implemented, multi-frame confirmation.
+4. **Sensor Integration:** Associates detections with available GPS, orientation, altitude, and proximity data.
+5. **Target Recording:** Stores detection information, timestamps, confidence scores, and available location data.
+6. **Priority Assessment:** Assigns configured rescue-priority levels using the implemented scoring rules.
+7. **Dashboard Synchronization:** Sends records to the Ground Control Station when communication is available.
 
-### Ground Station Endpoints (Node.js `:3000`)
+**Important limitation:** Accurate victim GPS georeferencing requires appropriate camera calibration, camera orientation, drone position and altitude, and a suitable projection or ranging method. GPS coordinates alone do not directly convert image bounding boxes into precise ground coordinates. Likewise, hazard classification requires a model trained or configured for the relevant hazard classes.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/telemetry` | Retrieve current drone avionics, position, battery, and flight mode |
-| `POST` | `/api/telemetry` | Ingest avionics telemetry from ESP32 MQTT bridge or simulator |
-| `GET` | `/api/detections` | Retrieve all detected victims and hazards |
-| `POST` | `/api/detections` | Ingest new detection record with coordinates, image, and priority |
-| `POST` | `/api/detections/clear` | Purge detection history and rescue logs |
-| `POST` | `/api/mission/control` | Send flight commands: `START`, `PAUSE`, `RETURN_HOME`, `EMERGENCY_LAND` |
-| `POST` | `/api/mission/assign` | Assign autonomous waypoint survey flight plan |
-| `GET` | `/api/rescue-log` | Retrieve rescue team dispatch status log |
-| `POST` | `/api/rescue-log` | Create or update rescue dispatch entry |
-| `GET` | `/api/rescue-log/csv` | Download rescue coordination log as CSV for field responders |
-| `GET` | `/api/network-info` | Discover LAN IPs and smartphone connection URLs |
-| `POST` | `/api/ipwebcam/connect` | Connect to an external Android IP Webcam stream |
+## REST and WebSocket API Reference
 
-### Edge Diagnostics Endpoints (FastAPI `:8000`)
+The following endpoints describe the intended application interface. Confirm that each route is implemented and enabled in the current version of the server.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Diagnostic check of GPS, IMU, Sonar, and database metrics |
-| `GET` | `/victims` | List stored victims from local offline database |
-| `POST` | `/simulate-detection` | Inject a synthetic victim detection for drill exercises |
-| `POST` | `/simulate-hazard` | Inject a synthetic landslide hazard for training |
+### Ground Control Station — Node.js
 
----
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/telemetry` | Retrieve current telemetry |
+| POST | `/api/telemetry` | Submit telemetry data |
+| GET | `/api/detections` | Retrieve recorded detections |
+| POST | `/api/detections` | Submit a detection record |
+| POST | `/api/detections/clear` | Clear detection history |
+| POST | `/api/mission/control` | Request a mission-control action |
+| POST | `/api/mission/assign` | Assign a survey route |
+| GET | `/api/rescue-log` | Retrieve rescue coordination records |
+| POST | `/api/rescue-log` | Create or update a rescue record |
+| GET | `/api/rescue-log/csv` | Export rescue records as CSV |
+| GET | `/api/network-info` | Retrieve network connection information |
+| POST | `/api/ipwebcam/connect` | Configure an IP Webcam stream |
 
-## 🔬 Hardware Simulation (Wokwi)
+### Edge Diagnostics — FastAPI
 
-To simulate the ESP32 avionics node without physical hardware:
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health` | Check service health |
+| GET | `/victims` | Retrieve locally stored victim records |
+| POST | `/simulate-detection` | Submit a simulated detection |
+| POST | `/simulate-hazard` | Submit a simulated hazard |
 
-1. Open [wokwi.com/projects/new/esp32](https://wokwi.com/projects/new/esp32).
-2. Copy the contents of [`hardware/esp32_firmware.ino`](file:///f:/SIH_Project/Application/hardware/esp32_firmware.ino) into the **Code** tab.
-3. Copy the contents of [`hardware/diagram.json`](file:///f:/SIH_Project/Application/hardware/diagram.json) into the **diagram.json** tab.
-4. Add the libraries listed in [`hardware/libraries.txt`](file:///f:/SIH_Project/Application/hardware/libraries.txt) via the **Library Manager**.
-5. Click **Start Simulation**.
-6. Move the ultrasonic distance slider below 150 cm to watch the Alert LED illuminate and trigger the proximity hazard alert over MQTT.
+## Hardware Simulation Using Wokwi
 
----
+The ESP32 telemetry node can be tested in Wokwi before physical deployment.
 
-## ⚙️ Configuration Reference
+1. Open the [Wokwi ESP32 Project](https://wokwi.com/projects/new/esp32).
+2. Add the ESP32 board and the required supported sensors.
+3. Configure the wiring according to the hardware pin specification.
+4. Copy the firmware into the code editor.
+5. Add the required libraries and configure the simulation circuit.
+6. Start the simulation and inspect the serial monitor.
+7. Test ultrasonic distance readings, IMU output, status indicators, and MQTT transmission where the simulation and network configuration support them.
 
-Key parameters can be configured via environment variables or modified directly in [`rescue_drone/config/config.py`](file:///f:/SIH_Project/Application/rescue_drone/config/config.py):
+Wokwi testing validates the simulated firmware and sensor interactions. It does not, by itself, demonstrate autonomous flight, real-world obstacle avoidance, or full drone navigation.
 
-| Variable | Default Value | Description |
-|----------|---------------|-------------|
-| `DRONE_ID` | `DRONE_01` | Unique identifier for the aerial vehicle |
-| `MQTT_BROKER` | `broker.hivemq.com` | MQTT broker hostname (use `localhost` for local Mosquitto) |
-| `MQTT_PORT` | `1883` | MQTT broker port |
-| `YOLO_CONF_THRESHOLD` | `0.28` | Minimum detection confidence score |
-| `YOLO_DEVICE` | `cpu` | Inference accelerator (`cpu`, `cuda`, `mps`) |
-| `SIMULATE_AI` | `false` | Run AI in synthetic detection mode without loading weights |
-| `DASHBOARD_REST_URL` | `http://localhost:3000` | Command Ground Station base URL |
-| `DASHBOARD_WS_URL` | `ws://localhost:3000` | Command Ground Station WebSocket URL |
-| `SSL_PORT` | `3443` | Secure HTTPS port for mobile camera access |
+## Configuration Reference
 
----
+The following parameters may be used by the application, depending on the implementation in `rescue_drone/config/config.py`.
 
-## 🧪 Testing the Pipeline
+| Parameter | Example Default | Purpose |
+|---|---|---|
+| `DRONE_ID` | `DRONE_01` | Identifies the drone |
+| `MQTT_BROKER` | `broker.hivemq.com` | MQTT broker hostname |
+| `MQTT_PORT` | `1883` | MQTT connection port |
+| `YOLO_CONF_THRESHOLD` | `0.28` | Minimum detection confidence |
+| `YOLO_DEVICE` | `cpu` | Inference device |
+| `SIMULATE_AI` | `false` | Enables or disables synthetic AI mode |
+| `DASHBOARD_REST_URL` | `http://localhost:3000` | Dashboard base URL |
+| `DASHBOARD_WS_URL` | `ws://localhost:3000` | Dashboard WebSocket URL |
+| `SSL_PORT` | `3443` | HTTPS port for mobile camera access |
 
-A comprehensive test suite is included to benchmark detection rates and pipeline latency:
+Actual defaults and variable names should be verified against the project's configuration file.
+
+For deployments beyond local testing, configure authentication, access controls, encrypted communications, and a properly secured MQTT broker rather than relying on a public broker.
+
+## Testing the Pipeline
+
+Run the integration test script from the Python project directory:
 
 ```bash
 cd rescue_drone
 python test_pipeline.py
 ```
-This tests:
-- Model loading and inference throughput.
-- Target georeferencing and GPS calculation accuracy.
-- Database write and read performance.
-- Offline queuing and synchronization retry logic.
 
----
+The test suite is intended to evaluate:
 
-## 👥 Team & License
+- AI model loading and inference performance.
+- Target georeferencing calculations.
+- Local database read and write operations.
+- Offline queueing and synchronization logic.
+- Integration between processing and communication components.
 
-Developed with dedication for the **Smart India Hackathon (SIH)** disaster management and autonomous drone search-and-rescue domain.
+Actual test coverage and results depend on the implementation and the available hardware.
 
-- **License**: Released under the [MIT License](LICENSE).
-- **Core Mission**: Accelerating first responder reaction times and saving lives through edge artificial intelligence and autonomous robotics.
+## Expected Impact
+
+A.S.A.R.D aims to support disaster response by reducing the time required to identify potential survivors, improving situational awareness, and helping responders prioritize field assessments.
+
+Its modular architecture combines AI-based visual detection, IoT telemetry, mapping, and offline-capable data management. The design can be extended with thermal imaging, two-way victim communication, medical-assistance requests, and additional hazard-specific detection models.
+
+The system is intended to assist trained rescue personnel rather than replace their judgment. Detection results, location estimates, and rescue priorities should be verified before operational decisions are made.
+
+## Future Enhancements
+
+- Integration of RGB and thermal imaging for improved survivor detection in difficult visibility conditions.
+- Two-way communication between trapped victims and rescue teams.
+- Dashboard-triggered medical-assistance requests based on implemented voice or user-input detection.
+- Improved GPS georeferencing and mapping using calibrated cameras and additional ranging sensors.
+- Integration with a compatible flight controller for verified autonomous navigation.
+- Battery-aware mission management and return-to-home functionality.
+- Secure synchronization with emergency-response command systems.
+- To detect the person beneath the wall we used the UWT Sensor.
