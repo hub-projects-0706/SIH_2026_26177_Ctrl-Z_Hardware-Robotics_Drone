@@ -140,23 +140,8 @@ Before running the software, ensure that the following are available:
 6. **AI Model Weights:** The trained model files required for inference.
 7. **Camera Source:** A compatible webcam, smartphone camera stream, or onboard camera.
 8. **Network Connection:** Required for communication between separate devices; local processing and storage can continue offline where configured.
-
-## Quick Start Guide
-
-### Option A: One-Click Startup on Windows
-
-Run the following file from the project directory:
-
-```bat
-run_system.bat
-```
-
-The launcher is intended to start the web dashboard, check the dashboard connection, and launch the Python AI processing system.
-
-Ensure the required dependencies, configuration files, and model weights are installed before running it.
-
-### Option B: Manual Startup
-
+ 
+A: Manual Startup
 **Step 1: Start the Ground Control Dashboard**
 
 Open a terminal and execute:
